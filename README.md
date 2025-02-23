@@ -1,5 +1,5 @@
-# gidm
-### Identity Management with Golang
+# approve
+### Approving Management
 
 1. Start PostgreSQL server
 
@@ -10,14 +10,14 @@ podman-compose -f ./container/podman-compose.yaml up
 2. Create database
 
 ```shell
-create database gidm;
+create database approve;
 ```
 
 3. Add .env file in the project root dir:
 
 ```dotenv
 GOOSE_DRIVER=postgres
-GOOSE_DBSTRING=postgres://<user>:<password>@localhost:5432/gidm
+GOOSE_DBSTRING=postgres://<user>:<password>@localhost:5432/approve
 GOOSE_MIGRATION_DIR=./db/migrations
 ```
 4. Install goose

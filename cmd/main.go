@@ -1,7 +1,11 @@
-package cmd
+package main
 
-import "fmt"
+import (
+	"approve/common"
+)
+
+var log = common.Logger
 
 func main() {
-	fmt.Println("started")
+	log.Info("Starting...")
 }

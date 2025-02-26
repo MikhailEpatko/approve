@@ -23,10 +23,10 @@ type StepGroupEntity struct {
 }
 
 func NewStepGroupEntity(
-		routeId int,
-		name string,
-		number int,
-		stepType StepType,
+	routeId int,
+	name string,
+	number int,
+	stepType StepType,
 ) *StepGroupEntity {
 	return &StepGroupEntity{
 		RouteId:    routeId,

@@ -11,7 +11,7 @@ const (
 	FINISHED Status = "FINISHED"
 )
 
-type Route struct {
+type RouteEntity struct {
 	Id          int
 	Name        string
 	Description string
@@ -21,11 +21,11 @@ type Route struct {
 	Deleted     bool
 }
 
-func NewRoute(
+func NewRouteEntity(
 	name,
 	description string,
-) *Route {
-	return &Route{
+) *RouteEntity {
+	return &RouteEntity{
 		Name:        name,
 		Description: description,
 		Status:      TEMPLATE,

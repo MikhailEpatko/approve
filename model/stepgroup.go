@@ -10,7 +10,7 @@ const (
 	SEQUENTIAL StepType = "SEQUENTIAL"
 )
 
-type StepGroup struct {
+type StepGroupEntity struct {
 	Id         int
 	RouteId    int
 	Name       string
@@ -22,13 +22,13 @@ type StepGroup struct {
 	Deleted    bool
 }
 
-func NewStepGroup(
-	routeId int,
-	name string,
-	number int,
-	stepType StepType,
-) *StepGroup {
-	return &StepGroup{
+func NewStepGroupEntity(
+		routeId int,
+		name string,
+		number int,
+		stepType StepType,
+) *StepGroupEntity {
+	return &StepGroupEntity{
 		RouteId:    routeId,
 		Name:       name,
 		Number:     number,

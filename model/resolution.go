@@ -1,7 +1,5 @@
 package model
 
-import "time"
-
 type Decision string
 
 const (
@@ -12,13 +10,11 @@ const (
 )
 
 type ResolutionEntity struct {
-	Id         int
-	ApproverId int
-	Decision   Decision
-	Comment    string
-	CreatedAt  time.Time
-	ModifiedAt time.Time
-	Deleted    bool
+	Id         int      `db:"id"`
+	ApproverId int      `db:"approver_id"`
+	Decision   Decision `db:"decision"`
+	Comment    string   `db:"comment"`
+	Deleted    bool     `db:"deleted"`
 }
 
 func NewResolutionEntity(
@@ -27,8 +23,6 @@ func NewResolutionEntity(
 	return &ResolutionEntity{
 		ApproverId: approverId,
 		Decision:   UNKNOWN,
-		CreatedAt:  time.Now(),
-		ModifiedAt: time.Now(),
 		Deleted:    false,
 	}
 }

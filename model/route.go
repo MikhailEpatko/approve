@@ -1,7 +1,5 @@
 package model
 
-import "time"
-
 type Status string
 
 const (
@@ -12,13 +10,11 @@ const (
 )
 
 type RouteEntity struct {
-	Id          int
-	Name        string
-	Description string
-	Status      Status
-	CreatedAt   time.Time
-	ModifiedAt  time.Time
-	Deleted     bool
+	Id          int    `db:"id"`
+	Name        string `db:"name"`
+	Description string `db:"description"`
+	Status      Status `db:"status"`
+	Deleted     bool   `db:"deleted"`
 }
 
 func NewRouteEntity(
@@ -29,8 +25,6 @@ func NewRouteEntity(
 		Name:        name,
 		Description: description,
 		Status:      TEMPLATE,
-		CreatedAt:   time.Now(),
-		ModifiedAt:  time.Now(),
 		Deleted:     false,
 	}
 }

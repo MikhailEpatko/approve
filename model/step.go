@@ -1,9 +1,5 @@
 package model
 
-import (
-	"time"
-)
-
 type ApproveType string
 
 const (
@@ -13,15 +9,13 @@ const (
 )
 
 type StepEntity struct {
-	Id          int
-	StepGroupId int
-	Name        string
-	Number      int
-	Status      Status
-	ApproveType ApproveType
-	CreatedAt   time.Time
-	ModifiedAt  time.Time
-	Deleted     bool
+	Id          int         `db:"id"`
+	StepGroupId int         `db:"step_group_id"`
+	Name        string      `db:"name"`
+	Number      int         `db:"number"`
+	Status      Status      `db:"status"`
+	ApproveType ApproveType `db:"approve_type"`
+	Deleted     bool        `db:"deleted"`
 }
 
 func NewStepEntity(
@@ -36,8 +30,6 @@ func NewStepEntity(
 		Number:      number,
 		Status:      NEW,
 		ApproveType: approveType,
-		CreatedAt:   time.Now(),
-		ModifiedAt:  time.Now(),
 		Deleted:     false,
 	}
 }

@@ -1,17 +1,13 @@
 package model
 
-import "time"
-
 type ApproverEntity struct {
-	Id         int
-	StepId     int
-	Guid       string
-	Name       string
-	Email      string
-	Number     int
-	CreatedAt  time.Time
-	ModifiedAt time.Time
-	Deleted    bool
+	Id      int    `db:"id"`
+	StepId  int    `db:"step_id"`
+	Guid    string `db:"guid"`
+	Name    string `db:"name"`
+	Email   string `db:"email"`
+	Number  int    `db:"number"`
+	Deleted bool   `db:"deleted"`
 }
 
 func NewApproverEntity(
@@ -22,13 +18,11 @@ func NewApproverEntity(
 	number int,
 ) *ApproverEntity {
 	return &ApproverEntity{
-		StepId:     stepId,
-		Guid:       guid,
-		Name:       name,
-		Email:      email,
-		Number:     number,
-		CreatedAt:  time.Now(),
-		ModifiedAt: time.Now(),
-		Deleted:    false,
+		StepId:  stepId,
+		Guid:    guid,
+		Name:    name,
+		Email:   email,
+		Number:  number,
+		Deleted: false,
 	}
 }

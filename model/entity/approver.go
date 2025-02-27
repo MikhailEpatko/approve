@@ -1,4 +1,4 @@
-package model
+package entity
 
 type ApproverEntity struct {
 	Id      int    `db:"id"`

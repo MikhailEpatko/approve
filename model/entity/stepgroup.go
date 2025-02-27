@@ -1,4 +1,4 @@
-package model
+package entity
 
 type StepGroupStatus string
 type StepType string

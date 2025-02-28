@@ -6,34 +6,43 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type RouteRepository struct {
+type RouteRepository interface {
+	FindAll() ([]RouteEntity, error)
+	FindByIdIn(ids []int) ([]RouteEntity, error)
+	FindById(id int) (RouteEntity, error)
+	Save(route RouteEntity) (int, error)
+	Delete(id int) error
+	Update(route RouteEntity) error
+}
+
+type routeRepo struct {
 	db *sqlx.DB
 }
 
-func NewRouteRepository(db *sqlx.DB) *RouteRepository {
-	return &RouteRepository{db}
+func NewRouteRepository(db *sqlx.DB) RouteRepository {
+	return &routeRepo{db}
 }
 
-func (r *RouteRepository) FindAll() ([]RouteEntity, error) {
+func (r *routeRepo) FindAll() ([]RouteEntity, error) {
 	return nil, NOT_IMPLEMENTED
 }
 
-func (r *RouteRepository) FindByIdIn(ids []int) ([]RouteEntity, error) {
+func (r *routeRepo) FindByIdIn(ids []int) ([]RouteEntity, error) {
 	return nil, NOT_IMPLEMENTED
 }
 
-func (r *RouteRepository) FindById(id int) (RouteEntity, error) {
+func (r *routeRepo) FindById(id int) (RouteEntity, error) {
 	return RouteEntity{}, NOT_IMPLEMENTED
 }
 
-func (r *RouteRepository) Save(route RouteEntity) (int, error) {
+func (r *routeRepo) Save(route RouteEntity) (int, error) {
 	return 0, NOT_IMPLEMENTED
 }
 
-func (r *RouteRepository) Delete(id int) error {
+func (r *routeRepo) Delete(id int) error {
 	return NOT_IMPLEMENTED
 }
 
-func (r *RouteRepository) Update(route RouteEntity) error {
+func (r *routeRepo) Update(route RouteEntity) error {
 	return NOT_IMPLEMENTED
 }

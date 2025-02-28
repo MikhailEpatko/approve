@@ -6,34 +6,43 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type ApproverRepository struct {
+type ApproverRepository interface {
+	FindAll() ([]ApproverEntity, error)
+	FindByIdIn(ids []int) ([]ApproverEntity, error)
+	FindById(id int) (ApproverEntity, error)
+	Save(approver ApproverEntity) (int, error)
+	Delete(id int) error
+	Update(approver ApproverEntity) error
+}
+
+type approverRepo struct {
 	db *sqlx.DB
 }
 
-func NewApproverRepository(db *sqlx.DB) *ApproverRepository {
-	return &ApproverRepository{db}
+func NewApproverRepository(db *sqlx.DB) ApproverRepository {
+	return &approverRepo{db}
 }
 
-func (r *ApproverRepository) FindAll() ([]ApproverEntity, error) {
+func (r *approverRepo) FindAll() ([]ApproverEntity, error) {
 	return nil, NOT_IMPLEMENTED
 }
 
-func (r *ApproverRepository) FindByIdIn(ids []int) ([]ApproverEntity, error) {
+func (r *approverRepo) FindByIdIn(ids []int) ([]ApproverEntity, error) {
 	return nil, NOT_IMPLEMENTED
 }
 
-func (r *ApproverRepository) FindById(id int) (ApproverEntity, error) {
+func (r *approverRepo) FindById(id int) (ApproverEntity, error) {
 	return ApproverEntity{}, NOT_IMPLEMENTED
 }
 
-func (r *ApproverRepository) Save(approver ApproverEntity) (int, error) {
+func (r *approverRepo) Save(approver ApproverEntity) (int, error) {
 	return 0, NOT_IMPLEMENTED
 }
 
-func (r *ApproverRepository) Delete(id int) error {
+func (r *approverRepo) Delete(id int) error {
 	return NOT_IMPLEMENTED
 }
 
-func (r *ApproverRepository) Update(approver ApproverEntity) error {
+func (r *approverRepo) Update(approver ApproverEntity) error {
 	return NOT_IMPLEMENTED
 }

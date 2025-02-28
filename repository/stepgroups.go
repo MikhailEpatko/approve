@@ -6,34 +6,43 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type StepGroupRepository struct {
+type StepGroupRepository interface {
+	FindAll() ([]StepGroupEntity, error)
+	FindByIdIn(ids []int) ([]StepGroupEntity, error)
+	FindById(id int) (StepGroupEntity, error)
+	Save(StepGroup StepGroupEntity) (int, error)
+	Delete(id int) error
+	Update(StepGroup StepGroupEntity) error
+}
+
+type stepGroupRepo struct {
 	db *sqlx.DB
 }
 
-func NewStepGroupRepository(db *sqlx.DB) *StepGroupRepository {
-	return &StepGroupRepository{db}
+func NewStepGroupRepository(db *sqlx.DB) StepGroupRepository {
+	return &stepGroupRepo{db}
 }
 
-func (r *StepGroupRepository) FindAll() ([]StepGroupEntity, error) {
+func (r *stepGroupRepo) FindAll() ([]StepGroupEntity, error) {
 	return nil, NOT_IMPLEMENTED
 }
 
-func (r *StepGroupRepository) FindByIdIn(ids []int) ([]StepGroupEntity, error) {
+func (r *stepGroupRepo) FindByIdIn(ids []int) ([]StepGroupEntity, error) {
 	return nil, NOT_IMPLEMENTED
 }
 
-func (r *StepGroupRepository) FindById(id int) (StepGroupEntity, error) {
+func (r *stepGroupRepo) FindById(id int) (StepGroupEntity, error) {
 	return StepGroupEntity{}, NOT_IMPLEMENTED
 }
 
-func (r *StepGroupRepository) Save(StepGroup StepGroupEntity) (int, error) {
+func (r *stepGroupRepo) Save(StepGroup StepGroupEntity) (int, error) {
 	return 0, NOT_IMPLEMENTED
 }
 
-func (r *StepGroupRepository) Delete(id int) error {
+func (r *stepGroupRepo) Delete(id int) error {
 	return NOT_IMPLEMENTED
 }
 
-func (r *StepGroupRepository) Update(StepGroup StepGroupEntity) error {
+func (r *stepGroupRepo) Update(StepGroup StepGroupEntity) error {
 	return NOT_IMPLEMENTED
 }

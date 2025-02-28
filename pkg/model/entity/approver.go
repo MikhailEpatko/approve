@@ -1,8 +1,8 @@
 package entity
 
 type ApproverEntity struct {
-	Id      int    `db:"id"`
-	StepId  int    `db:"step_id"`
+	Id      int64  `db:"id"`
+	StepId  int64  `db:"step_id"`
 	Guid    string `db:"guid"`
 	Name    string `db:"name"`
 	Email   string `db:"email"`
@@ -11,7 +11,7 @@ type ApproverEntity struct {
 }
 
 func NewApproverEntity(
-	stepId int,
+	stepId int64,
 	guid string,
 	name string,
 	email string,

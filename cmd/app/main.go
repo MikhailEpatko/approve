@@ -1,7 +1,7 @@
 package main
 
 import (
-	"approve/common"
+	"approve/internal/common"
 )
 
 var log = common.Logger

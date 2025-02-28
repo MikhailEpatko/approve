@@ -9,7 +9,7 @@ create table if not exists route
 (
   id          bigserial primary key,
   name        text                           not null,
-  description text,
+  description text                           not null,
   status      status_enum default 'TEMPLATE' not null,
   deleted     boolean     default false
 );
@@ -31,7 +31,7 @@ create table if not exists step_group
   number    int                       not null,
   step_type text                      not null,
   status    status_enum default 'NEW' not null,
-  deleted   boolean     default false,
+  deleted   boolean     default false not null,
   unique (route_id, number)
 );
 
@@ -52,7 +52,7 @@ create table if not exists step
   number        int                       not null,
   status        status_enum default 'NEW' not null,
   approve_type  approve_type_enum         not null,
-  deleted       boolean     default false,
+  deleted       boolean     default false not null,
   unique (step_group_id, number)
 );
 
@@ -65,15 +65,15 @@ create or replace rule soft_delete_step as
 create table if not exists approver
 (
   id      bigserial primary key,
-  step_id bigint not null
+  step_id bigint                not null
     constraint fk_step_id
       references step
       on delete cascade,
-  guid    text   not null,
-  name    text   not null,
-  email   text   not null,
-  number  int    not null,
-  deleted boolean default false,
+  guid    text                  not null,
+  name    text                  not null,
+  email   text                  not null,
+  number  int                   not null,
+  deleted boolean default false not null,
   unique (step_id, number)
 );
 
@@ -91,8 +91,8 @@ create table if not exists resolution
       references approver
       on delete cascade,
   decision    decision_enum default 'UNKNOWN' not null,
-  comment     text,
-  deleted     boolean       default false
+  comment     text                            not null,
+  deleted     boolean       default false     not null
 );
 
 create or replace rule soft_delete_resolution as

@@ -9,8 +9,8 @@ const (
 )
 
 type StepGroupEntity struct {
-	Id       int      `db:"id"`
-	RouteId  int      `db:"route_id"`
+	Id       int64    `db:"id"`
+	RouteId  int64    `db:"route_id"`
 	Name     string   `db:"name"`
 	Number   int      `db:"number"`
 	Status   Status   `db:"status"`
@@ -19,7 +19,7 @@ type StepGroupEntity struct {
 }
 
 func NewStepGroupEntity(
-	routeId int,
+	routeId int64,
 	name string,
 	number int,
 	stepType StepType,

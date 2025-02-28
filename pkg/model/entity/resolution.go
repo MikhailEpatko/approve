@@ -10,15 +10,15 @@ const (
 )
 
 type ResolutionEntity struct {
-	Id         int      `db:"id"`
-	ApproverId int      `db:"approver_id"`
+	Id         int64    `db:"id"`
+	ApproverId int64    `db:"approver_id"`
 	Decision   Decision `db:"decision"`
 	Comment    string   `db:"comment"`
 	Deleted    bool     `db:"deleted"`
 }
 
 func NewResolutionEntity(
-	approverId int,
+	approverId int64,
 ) *ResolutionEntity {
 	return &ResolutionEntity{
 		ApproverId: approverId,

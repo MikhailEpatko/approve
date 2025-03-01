@@ -1,0 +1,24 @@
+name: LoC badge
+on:
+  push:
+    branches: [ "main" ]
+jobs:
+  lines_counter_job:
+    runs-on: ubuntu-latest
+    name: A job to count lines of code
+    steps:
+      - uses: actions/checkout@v4
+      - uses: MikhailEpatko/loc-badge-action@v4.0.0
+        with:
+          scan-directories: .
+          output-directory: output
+          output-filename: loc-badge.svg
+          rounding: I
+          color: green
+          exclude-directories: .git
+      - name: Deploy badge to image-data branch
+        uses: peaceiris/actions-gh-pages@v3.9.3
+        with:
+          publish_dir: ./output
+          publish_branch: loc-badge
+          github_token: ${{ github.token }}

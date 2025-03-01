@@ -1,7 +1,7 @@
+![LoC Badge](https://github.com/MikhailEpatko/spring-boot-demo-app/blob/loc-badge/loc-badge.svg) ![HoC Badge](https://github.com/MikhailEpatko/spring-boot-demo-app/blob/hoc-badge/hoc-badge.svg)
 # approve
 ### Approving Management
 
-![LoC Badge](https://github.com/MikhailEpatko/spring-boot-demo-app/blob/loc-badge/loc-badge.svg) ![HoC Badge](https://github.com/MikhailEpatko/spring-boot-demo-app/blob/hoc-badge/hoc-badge.svg)
 
 1. Start PostgreSQL server
 

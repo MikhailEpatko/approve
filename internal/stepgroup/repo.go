@@ -1,4 +1,4 @@
-package repository
+package stepgroup
 
 import (
 	. "approve/pkg/model/entity"

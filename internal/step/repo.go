@@ -1,4 +1,4 @@
-package repository
+package step
 
 import (
 	. "approve/pkg/model/entity"

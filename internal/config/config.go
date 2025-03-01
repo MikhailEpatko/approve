@@ -1,7 +1,11 @@
 package config
 
 import (
-	. "approve/internal/repository"
+	. "approve/internal/approver"
+	. "approve/internal/resolution"
+	. "approve/internal/route/repository"
+	. "approve/internal/step"
+	. "approve/internal/stepgroup"
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"

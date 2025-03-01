@@ -1,5 +1,9 @@
 package entity
 
+import (
+	"approve/internal/common"
+)
+
 type ApproveType string
 
 const (
@@ -9,13 +13,13 @@ const (
 )
 
 type StepEntity struct {
-	Id          int64       `db:"id"`
-	StepGroupId int64       `db:"step_group_id"`
-	Name        string      `db:"name"`
-	Number      int         `db:"number"`
-	Status      Status      `db:"status"`
-	ApproveType ApproveType `db:"approve_type"`
-	Deleted     bool        `db:"deleted"`
+	Id          int64         `db:"id"`
+	StepGroupId int64         `db:"step_group_id"`
+	Name        string        `db:"name"`
+	Number      int           `db:"number"`
+	Status      common.Status `db:"status"`
+	ApproveType ApproveType   `db:"approve_type"`
+	Deleted     bool          `db:"deleted"`
 }
 
 func NewStepEntity(
@@ -28,7 +32,7 @@ func NewStepEntity(
 		StepGroupId: stepGroupId,
 		Name:        name,
 		Number:      number,
-		Status:      NEW,
+		Status:      common.NEW,
 		ApproveType: approveType,
 		Deleted:     false,
 	}

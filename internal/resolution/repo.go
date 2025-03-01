@@ -1,4 +1,4 @@
-package repository
+package resolution
 
 import (
 	. "approve/pkg/model/entity"

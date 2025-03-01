@@ -1,6 +1,9 @@
 package entity
 
-type StepGroupStatus string
+import (
+	"approve/internal/common"
+)
+
 type StepType string
 
 const (
@@ -9,13 +12,13 @@ const (
 )
 
 type StepGroupEntity struct {
-	Id       int64    `db:"id"`
-	RouteId  int64    `db:"route_id"`
-	Name     string   `db:"name"`
-	Number   int      `db:"number"`
-	Status   Status   `db:"status"`
-	StepType StepType `db:"step_type"`
-	Deleted  bool     `db:"deleted"`
+	Id       int64         `db:"id"`
+	RouteId  int64         `db:"route_id"`
+	Name     string        `db:"name"`
+	Number   int           `db:"number"`
+	Status   common.Status `db:"status"`
+	StepType StepType      `db:"step_type"`
+	Deleted  bool          `db:"deleted"`
 }
 
 func NewStepGroupEntity(
@@ -28,7 +31,7 @@ func NewStepGroupEntity(
 		RouteId:  routeId,
 		Name:     name,
 		Number:   number,
-		Status:   NEW,
+		Status:   common.NEW,
 		StepType: stepType,
 		Deleted:  false,
 	}

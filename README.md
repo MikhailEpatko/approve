@@ -15,12 +15,21 @@ podman-compose -f ./container/podman-compose.yaml up
 create database approve;
 ```
 
-3. Add .env file in the project root dir:
+3. Add environment variables:
 
-```dotenv
-GOOSE_DRIVER=postgres
-GOOSE_DBSTRING=postgres://<user>:<password>@localhost:5432/approve
-GOOSE_MIGRATION_DIR=./db/migrations
+```bash
+export DB_DRIVER_NAME=postgres
+export DB_HOST=<host>
+export DB_PORT=<port>
+export DB_NAME=<db_name>
+export DB_SSL_MODE=disable
+export DB_USER=<user>
+export DB_PASSWORD=<password>
+
+export GOOSE_DRIVER=$DB_DRIVER_NAME
+export GOOSE_DBSTRING=$DB_DRIVER_NAME://$DB_USER:$DB_PASSWORD@$DB_HOST:$DB_PORT/$DB_NAME
+export GOOSE_MIGRATION_DIR=./db/migrations
+
 ```
 4. Install goose
 

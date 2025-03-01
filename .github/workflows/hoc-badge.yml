@@ -17,4 +17,4 @@ jobs:
         with:
           publish_dir: ./hoc-badge
           publish_branch: hoc-badge
-#          github_token: ${{ github.token }}
+          github_token: ${{ github.token }}

@@ -26,14 +26,17 @@ func NewRouteRepository(db *sqlx.DB) RouteRepository {
 
 func (r *routeRepo) FindByfilter(filter FilterRouteRequest) ([]RouteEntity, int64, error) {
 	routes := []RouteEntity{}
-	query, params := findByFilterQueryAndParams(filter)
-	err := r.db.Select(&routes, query, params)
+	var total int64
+	query, params := countByFilterQueryAndParams(filter)
+	err := r.db.Select(&total, query, params)
 	if err != nil {
 		return nil, 0, err
 	}
-	var total int64
-	query, params = countByFilterQueryAndParams(filter)
-	err = r.db.Select(&total, query, params)
+	if total == 0 || int(total) <= filter.PageSize*(filter.PageNumber-1) {
+		return routes, 0, nil
+	}
+	query, params = findByFilterQueryAndParams(filter)
+	err = r.db.Select(&routes, query, params)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -61,7 +64,7 @@ func findByFilterQueryAndParams(filter FilterRouteRequest) (string, params) {
 		params["guid"] = filter.Guid
 	}
 	sb.WriteString(" order by r.id desc offset :offset limit :limit")
-	params["offset"] = filter.PageNumber * filter.PageSize
+	params["offset"] = (filter.PageNumber - 1) * filter.PageSize
 	params["limit"] = filter.PageSize
 	return sb.String(), params
 }

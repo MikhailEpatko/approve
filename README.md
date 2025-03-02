@@ -2,6 +2,7 @@
 # approve
 ### Approving Management
 
+version: 0.0.0
 
 1. Start PostgreSQL server
 

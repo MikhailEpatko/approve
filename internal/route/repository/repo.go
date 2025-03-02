@@ -35,7 +35,7 @@ func (r *routeRepo) FindByfilter(filter FilterRouteRequest) ([]RouteEntity, int6
 	query, params = countByFilterQueryAndParams(filter)
 	err = r.db.Select(&total, query, params)
 	if err != nil {
-		return routes, 0, err
+		return nil, 0, err
 	}
 	return routes, total, nil
 }

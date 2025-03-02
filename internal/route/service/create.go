@@ -22,7 +22,7 @@ type CreateFullRoute struct {
 	approverRepo  ar.ApproverRepository
 }
 
-func NewCreateRoute(
+func NewCreateFullRoute(
 	transaction common.Transaction,
 	routeRepo rr.RouteRepository,
 	groupRepo gr.StepGroupRepository,

@@ -1,7 +1,7 @@
-package step
+package repository
 
 import (
-	. "approve/pkg/model/entity"
+	. "approve/internal/step/model"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -9,6 +9,7 @@ type StepRepository interface {
 	FindByGroupId(id int64) ([]StepEntity, error)
 	Save(step StepEntity) (int64, error)
 	Update(step StepEntity) error
+	SaveAllTxReturning(tx *sqlx.Tx, steps []StepEntity) ([]StepEntity, error)
 }
 
 type stepRepo struct {
@@ -20,7 +21,7 @@ func NewStepRepository(db *sqlx.DB) StepRepository {
 }
 
 func (r *stepRepo) FindByGroupId(id int64) ([]StepEntity, error) {
-	steps := []StepEntity{}
+	var steps []StepEntity
 	err := r.db.Select(&steps, "select * from step where step_group_id = $1", id)
 	if err != nil {
 		return nil, err
@@ -55,4 +56,29 @@ func (r *stepRepo) Update(step StepEntity) error {
 		return err
 	}
 	return nil
+}
+
+func (r *stepRepo) SaveAllTxReturning(
+	tx *sqlx.Tx,
+	steps []StepEntity,
+) ([]StepEntity, error) {
+	saved := make([]StepEntity, 0, len(steps))
+	rows, err := tx.NamedQuery(
+		`insert into step (step_group_id, name, number, status, approve_type)
+     values (:step_group_id, :name, :number, :status, :approve_type)
+     returning *`,
+		&steps,
+	)
+	if err != nil {
+		return nil, err
+	}
+	step := StepEntity{}
+	for rows.Next() {
+		err = rows.StructScan(&step)
+		if err != nil {
+			return nil, err
+		}
+		saved = append(saved, step)
+	}
+	return saved, nil
 }

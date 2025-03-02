@@ -1,7 +1,7 @@
-package resolution
+package repository
 
 import (
-	. "approve/pkg/model/entity"
+	. "approve/internal/resolution/model"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -20,7 +20,7 @@ func NewResolutionRepository(db *sqlx.DB) ResolutionRepository {
 }
 
 func (r *resolutionRepo) FindByApproverId(id int64) ([]ResolutionEntity, error) {
-	resolutions := []ResolutionEntity{}
+	var resolutions []ResolutionEntity
 	err := r.db.Select(&resolutions, "select * from resolution where approver_id = $1", id)
 	if err != nil {
 		return nil, err

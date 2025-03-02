@@ -1,4 +1,4 @@
-package entity
+package model
 
 type Decision string
 
@@ -15,14 +15,4 @@ type ResolutionEntity struct {
 	Decision   Decision `db:"decision"`
 	Comment    string   `db:"comment"`
 	Deleted    bool     `db:"deleted"`
-}
-
-func NewResolutionEntity(
-	approverId int64,
-) *ResolutionEntity {
-	return &ResolutionEntity{
-		ApproverId: approverId,
-		Decision:   UNKNOWN,
-		Deleted:    false,
-	}
 }

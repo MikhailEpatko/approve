@@ -64,16 +64,17 @@ create or replace rule soft_delete_step as
 
 create table if not exists approver
 (
-  id      bigserial primary key,
-  step_id bigint                not null
+  id       bigserial primary key,
+  step_id  bigint                not null
     constraint fk_step_id
       references step
       on delete cascade,
-  guid    text                  not null,
-  name    text                  not null,
-  email   text                  not null,
-  number  int                   not null,
-  deleted boolean default false not null,
+  guid     text                  not null,
+  name     text                  not null,
+  position text                  not null,
+  email    text                  not null,
+  number   int                   not null,
+  deleted  boolean default false not null,
   unique (step_id, number)
 );
 

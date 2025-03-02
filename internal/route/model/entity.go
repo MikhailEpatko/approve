@@ -10,18 +10,6 @@ type RouteEntity struct {
 	Deleted     bool          `db:"deleted"`
 }
 
-func NewRouteEntity(
-	name,
-	description string,
-) *RouteEntity {
-	return &RouteEntity{
-		Name:        name,
-		Description: description,
-		Status:      common.TEMPLATE,
-		Deleted:     false,
-	}
-}
-
 func (e RouteEntity) ToResponse() RouteResponse {
 	return RouteResponse{
 		Id:          e.Id,

@@ -12,6 +12,7 @@ type RouteRepository interface {
 	Save(name, description string) (int64, error)
 	CopyAsNew(routeTemplateId int64) (int64, error)
 	Update(name, description string) (int64, error)
+	SaveTx(tx *sqlx.Tx, name string, description string) (int64, error)
 }
 
 type routeRepo struct {
@@ -25,7 +26,7 @@ func NewRouteRepository(db *sqlx.DB) RouteRepository {
 }
 
 func (r *routeRepo) FindByfilter(filter FilterRouteRequest) ([]RouteEntity, int64, error) {
-	routes := []RouteEntity{}
+	var routes []RouteEntity
 	var total int64
 	query, params := countByFilterQueryAndParams(filter)
 	err := r.db.Select(&total, query, params)
@@ -94,6 +95,24 @@ func countByFilterQueryAndParams(filter FilterRouteRequest) (string, params) {
 
 func (r *routeRepo) Save(name, description string) (int64, error) {
 	res, err := r.db.NamedExec(
+		"insert into route (name, description) values (:name, :description)",
+		map[string]interface{}{
+			"name":        name,
+			"description": description,
+		},
+	)
+	if err != nil {
+		return 0, err
+	}
+	return res.LastInsertId()
+}
+
+func (r *routeRepo) SaveTx(
+	tx *sqlx.Tx,
+	name,
+	description string,
+) (int64, error) {
+	res, err := tx.NamedExec(
 		"insert into route (name, description) values (:name, :description)",
 		map[string]interface{}{
 			"name":        name,

@@ -11,7 +11,7 @@ type FindRoutesByFilter struct {
 	validate *validator.Validate
 }
 
-func NewFindRoutesByApproverGuid(
+func NewFindRoutesByFilter(
 	repo RouteRepository,
 	validate *validator.Validate,
 ) *FindRoutesByFilter {

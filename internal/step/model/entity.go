@@ -1,4 +1,4 @@
-package entity
+package model
 
 import (
 	"approve/internal/common"
@@ -20,20 +20,4 @@ type StepEntity struct {
 	Status      common.Status `db:"status"`
 	ApproveType ApproveType   `db:"approve_type"`
 	Deleted     bool          `db:"deleted"`
-}
-
-func NewStepEntity(
-	stepGroupId int64,
-	name string,
-	number int,
-	approveType ApproveType,
-) *StepEntity {
-	return &StepEntity{
-		StepGroupId: stepGroupId,
-		Name:        name,
-		Number:      number,
-		Status:      common.NEW,
-		ApproveType: approveType,
-		Deleted:     false,
-	}
 }

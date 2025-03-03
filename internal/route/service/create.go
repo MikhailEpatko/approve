@@ -59,11 +59,8 @@ func (svc *CreateFullRoute) createRoute(
 	tx *sqlx.Tx,
 	request rm.CreateRouteRequest,
 ) (int64, error) {
-	routeId, err := svc.routeRepo.SaveTx(
-		tx,
-		request.Name,
-		request.Description,
-	)
+	route := request.ToEntity()
+	routeId, err := svc.routeRepo.SaveTx(tx, route)
 	if err != nil {
 		return 0, err
 	}

@@ -11,8 +11,8 @@ type RouteRepository interface {
 	FindByfilter(filter FilterRouteRequest) ([]RouteEntity, int64, error)
 	Save(name, description string) (int64, error)
 	CopyAsNew(routeTemplateId int64) (int64, error)
-	Update(name, description string) (int64, error)
-	SaveTx(tx *sqlx.Tx, name string, description string) (int64, error)
+	Update(route RouteEntity) (int64, error)
+	SaveTx(tx *sqlx.Tx, route RouteEntity) (int64, error)
 }
 
 type routeRepo struct {
@@ -109,15 +109,11 @@ func (r *routeRepo) Save(name, description string) (int64, error) {
 
 func (r *routeRepo) SaveTx(
 	tx *sqlx.Tx,
-	name,
-	description string,
+	route RouteEntity,
 ) (int64, error) {
 	res, err := tx.NamedExec(
-		"insert into route (name, description) values (:name, :description)",
-		map[string]interface{}{
-			"name":        name,
-			"description": description,
-		},
+		"insert into route (name, description, status) values (:name, :description, :status)",
+		route,
 	)
 	if err != nil {
 		return 0, err
@@ -137,17 +133,14 @@ func (r *routeRepo) CopyAsNew(routeTemplateId int64) (int64, error) {
 	return res.LastInsertId()
 }
 
-func (r *routeRepo) Update(name, description string) (int64, error) {
+func (r *routeRepo) Update(route RouteEntity) (int64, error) {
 	res, err := r.db.NamedExec(
 		`update route 
      set
 			 name = :name, 
 			 description = :description
 		 where id = :id`,
-		map[string]interface{}{
-			"name":        name,
-			"description": description,
-		},
+		route,
 	)
 	if err != nil {
 		return 0, err

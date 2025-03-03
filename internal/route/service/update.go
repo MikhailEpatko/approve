@@ -18,10 +18,10 @@ func NewUpdateRoute(
 	return &UpdateRoute{repo, validate}
 }
 
-func (service *UpdateRoute) Execute(request model.RouteRequest) (int64, error) {
-	err := service.validate.Struct(request)
-	if err == nil {
-		return 0, err
-	}
-	return service.repo.Update(request.Name, request.Description)
+func (service *UpdateRoute) Execute(
+	id int64,
+	request model.RouteRequest,
+) (int64, error) {
+	entity := request.ToEntity(id)
+	return service.repo.Update(entity)
 }

@@ -8,7 +8,7 @@ import (
 type CreateStepGroupRequest struct {
 	Name     string                    `json:"name"      validate:"required,min=1,max=155"`
 	Number   int                       `json:"number"    validate:"required,min=1,max=20"`
-	Status   common.Status             `json:"status"    validate:"required.oneof=TEMPLATE NEW STARTED FINISHED"`
+	Status   common.Status             `json:"status"    validate:"required,oneof=TEMPLATE NEW"`
 	StepType StepType                  `json:"step_type" validate:"required,oneof=PARALLEL SEQUENTIAL"`
 	Steps    []model.CreateStepRequest `json:"steps"     validate:"required,min=1,max=30"`
 }

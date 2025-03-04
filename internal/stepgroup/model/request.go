@@ -10,7 +10,7 @@ type CreateStepGroupRequest struct {
 	Number   int                       `json:"number"    validate:"required,min=1,max=20"`
 	Status   common.Status             `json:"status"    validate:"required,oneof=TEMPLATE NEW"`
 	StepType StepType                  `json:"step_type" validate:"required,oneof=PARALLEL SEQUENTIAL"`
-	Steps    []model.CreateStepRequest `json:"steps"     validate:"required,min=1,max=30"`
+	Steps    []model.CreateStepRequest `json:"steps"     validate:"required,min=1,max=10"`
 }
 
 func (request CreateStepGroupRequest) ToEntity(routeId int64) StepGroupEntity {

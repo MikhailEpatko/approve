@@ -22,7 +22,7 @@ func (r RouteRequest) ToEntity(routeId int64) RouteEntity {
 
 type CreateRouteRequest struct {
 	RouteRequest
-	StepGroups []model.CreateStepGroupRequest
+	StepGroups []model.CreateStepGroupRequest `json:"step_groups" validate:"required,min=1,max=10"`
 }
 
 func (r CreateRouteRequest) ToEntity() RouteEntity {

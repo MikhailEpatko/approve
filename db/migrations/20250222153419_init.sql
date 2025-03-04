@@ -7,7 +7,7 @@ create type decision_enum as enum ('UNKNOWN', 'ACCEPT', 'REJECT', 'REVISION');
 
 create table if not exists route
 (
-  id          bigserial primary key,
+  id          bigint primary key generated always as identity,
   name        text                           not null,
   description text                           not null,
   status      status_enum default 'TEMPLATE' not null,
@@ -22,7 +22,7 @@ create or replace rule soft_delete_route as
 
 create table if not exists step_group
 (
-  id        bigserial primary key,
+  id        bigint primary key generated always as identity,
   route_id  bigint                    not null
     constraint fk_route_id
       references route
@@ -43,7 +43,7 @@ create or replace rule soft_delete_step_group as
 
 create table if not exists step
 (
-  id            bigserial primary key,
+  id            bigint primary key generated always as identity,
   step_group_id bigint                    not null
     constraint fk_step_group_id
       references step_group
@@ -64,7 +64,7 @@ create or replace rule soft_delete_step as
 
 create table if not exists approver
 (
-  id       bigserial primary key,
+  id       bigint primary key generated always as identity,
   step_id  bigint                not null
     constraint fk_step_id
       references step
@@ -86,7 +86,7 @@ create or replace rule soft_delete_approver as
 
 create table if not exists resolution
 (
-  id          bigserial primary key,
+  id          bigint primary key generated always as identity,
   approver_id bigint                          not null
     constraint fk_approver_id
       references approver

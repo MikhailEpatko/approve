@@ -9,9 +9,6 @@ import (
 type ApproverRepository interface {
 	FindByStepId(id int64) ([]ApproverEntity, error)
 	Save(approver ApproverEntity) (int64, error)
-	Update(approver ApproverEntity) error
-	SaveAllTx(tx *sqlx.Tx, save []ApproverEntity) error
-	FinfByStepTx(tx *sqlx.Tx, step sm.StepEntity) ([]ApproverEntity, error)
 	StartApproversTx(tx *sqlx.Tx, step sm.StepEntity) error
 }
 
@@ -31,59 +28,14 @@ func (r *approverRepo) FindByStepId(id int64) ([]ApproverEntity, error) {
 
 func (r *approverRepo) Save(approver ApproverEntity) (int64, error) {
 	res, err := r.db.NamedExec(
-		`insert into approver (step_id, guid, name, position, email, number, active)
-     values (:step_id, :guid, :name, :position, :email, :number, :active)`,
+		`insert into approver (step_id, guid, name, position, email, number)
+     values (:step_id, :guid, :name, :position, :email, :number)`,
 		&approver,
 	)
 	if err != nil {
 		return 0, err
 	}
 	return res.LastInsertId()
-}
-
-func (r *approverRepo) Update(approver ApproverEntity) error {
-	_, err := r.db.NamedExec(
-		`update approver
-     set
-       guid = :guid,
-       name = :name,
-       position = :position,
-       email = :email,
-       number = :number,
-       active = :active
-     where id = :id`,
-		&approver,
-	)
-	return err
-}
-
-func (r *approverRepo) SaveAllTx(
-	tx *sqlx.Tx,
-	approvers []ApproverEntity,
-) error {
-	_, err := tx.NamedExec(
-		`insert into approver (step_id, guid, name, position, email, number)
-     values (:step_id, :guid, :name, :position, :email, :number)`,
-		&approvers,
-	)
-	return err
-}
-
-func (r *approverRepo) FinfByStepTx(
-	tx *sqlx.Tx,
-	step sm.StepEntity,
-) ([]ApproverEntity, error) {
-	var approvers []ApproverEntity
-	err := tx.Select(
-		&approvers,
-		`select * 
-     from approver
-     where step_id = $1
-     and (number = 1 and 'SEQUENTIAL_ALL_OFF' = $2 or 'SEQUENTIAL_ALL_OFF' <> $2)`,
-		step.Id,
-		step.ApproverOrder,
-	)
-	return approvers, err
 }
 
 func (r *approverRepo) StartApproversTx(

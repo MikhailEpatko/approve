@@ -9,6 +9,7 @@ type ResolutionRepository interface {
 	FindByApproverId(id int64) ([]ResolutionEntity, error)
 	Save(resolution ResolutionEntity) (int64, error)
 	Update(resolution ResolutionEntity) error
+	SaveAllTx(tx *sqlx.Tx, resolutions []ResolutionEntity) error
 }
 
 type resolutionRepo struct {
@@ -53,4 +54,12 @@ func (r *resolutionRepo) Update(resolution ResolutionEntity) error {
 		return err
 	}
 	return nil
+}
+
+func (r *resolutionRepo) SaveAllTx(
+	tx *sqlx.Tx,
+	resolutions []ResolutionEntity,
+) error {
+	_, err := tx.NamedExec(`insert into resolution (approver_id) values (:approver_id)`, resolutions)
+	return err
 }

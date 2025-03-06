@@ -9,7 +9,8 @@ type StepGroupRepository interface {
 	FindByRouteId(id int64) ([]StepGroupEntity, error)
 	Save(stepGroup StepGroupEntity) (int64, error)
 	Update(stepGroup StepGroupEntity) error
-	SaveAllTxReturning(tx *sqlx.Tx, groups []StepGroupEntity) ([]StepGroupEntity, error)
+	SaveAllTx(tx *sqlx.Tx, groups []StepGroupEntity) ([]StepGroupEntity, error)
+	StartGroupsTx(tx *sqlx.Tx, routeId int64) (StepGroupEntity, error)
 }
 
 type stepGroupRepo struct {
@@ -31,8 +32,8 @@ func (r *stepGroupRepo) FindByRouteId(id int64) ([]StepGroupEntity, error) {
 
 func (r *stepGroupRepo) Save(stepGroup StepGroupEntity) (int64, error) {
 	res, err := r.db.NamedExec(
-		`insert into step_group (route_id, name, number, status, step_type)
-     values (:route_id, :name, :number, :status, :step_type)`,
+		`insert into step_group (route_id, name, number, status, step_order)
+     values (:route_id, :name, :number, :status, :step_order)`,
 		&stepGroup,
 	)
 	if err != nil {
@@ -48,7 +49,7 @@ func (r *stepGroupRepo) Update(stepGroup StepGroupEntity) error {
 		 	 name = :name, 
 			 number = :number, 
 			 status = :status, 
-			 step_type = :step_type 
+			 step_order = :step_order 
 		 where id = :id`,
 		&stepGroup,
 	)
@@ -58,27 +59,44 @@ func (r *stepGroupRepo) Update(stepGroup StepGroupEntity) error {
 	return nil
 }
 
-func (r *stepGroupRepo) SaveAllTxReturning(
+func (r *stepGroupRepo) SaveAllTx(
 	tx *sqlx.Tx,
 	groups []StepGroupEntity,
 ) ([]StepGroupEntity, error) {
-	saved := make([]StepGroupEntity, 0, len(groups))
 	rows, err := tx.NamedQuery(
-		`insert into step_group (route_id, name, number, status, step_type)
-     values (:route_id, :name, :number, :status, :step_type)
+		`insert into step_group (route_id, name, number, status, step_order)
+     values (:route_id, :name, :number, :status, :step_order)
      returning *`,
 		&groups,
 	)
 	if err != nil {
 		return nil, err
 	}
-	step := StepGroupEntity{}
+	saved := make([]StepGroupEntity, 0, len(groups))
+	group := StepGroupEntity{}
 	for rows.Next() {
-		err = rows.StructScan(&step)
+		err = rows.StructScan(&group)
 		if err != nil {
 			return nil, err
 		}
-		saved = append(saved, step)
+		saved = append(saved, group)
 	}
 	return saved, nil
+}
+
+func (r *stepGroupRepo) StartGroupsTx(
+	tx *sqlx.Tx,
+	routeId int64,
+) (group StepGroupEntity, err error) {
+	rows, err := tx.Queryx(
+		`update step_group 
+     set status = 'STARTED'
+     where route_id = $1 and number = 1
+     returning *`,
+		routeId,
+	)
+	if err == nil && rows.Next() {
+		err = rows.Scan(&group)
+	}
+	return group, err
 }

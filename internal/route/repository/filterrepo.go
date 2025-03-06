@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-type SearchByFilterRouteRepository interface {
+type FindByFilterRouteRepository interface {
 	FindByfilter(filter rm.FilterRouteRequest) ([]rm.RouteEntity, int64, error)
 }
 

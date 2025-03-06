@@ -8,8 +8,6 @@ import (
 type StepGroupRepository interface {
 	FindByRouteId(id int64) ([]StepGroupEntity, error)
 	Save(stepGroup StepGroupEntity) (int64, error)
-	Update(stepGroup StepGroupEntity) error
-	SaveAllTx(tx *sqlx.Tx, groups []StepGroupEntity) ([]StepGroupEntity, error)
 	StartGroupsTx(tx *sqlx.Tx, routeId int64) (StepGroupEntity, error)
 }
 
@@ -40,48 +38,6 @@ func (r *stepGroupRepo) Save(stepGroup StepGroupEntity) (int64, error) {
 		return 0, err
 	}
 	return res.LastInsertId()
-}
-
-func (r *stepGroupRepo) Update(stepGroup StepGroupEntity) error {
-	_, err := r.db.NamedExec(
-		`update step_group 
-     set
-		 	 name = :name, 
-			 number = :number, 
-			 status = :status, 
-			 step_order = :step_order 
-		 where id = :id`,
-		&stepGroup,
-	)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (r *stepGroupRepo) SaveAllTx(
-	tx *sqlx.Tx,
-	groups []StepGroupEntity,
-) ([]StepGroupEntity, error) {
-	rows, err := tx.NamedQuery(
-		`insert into step_group (route_id, name, number, status, step_order)
-     values (:route_id, :name, :number, :status, :step_order)
-     returning *`,
-		&groups,
-	)
-	if err != nil {
-		return nil, err
-	}
-	saved := make([]StepGroupEntity, 0, len(groups))
-	group := StepGroupEntity{}
-	for rows.Next() {
-		err = rows.StructScan(&group)
-		if err != nil {
-			return nil, err
-		}
-		saved = append(saved, group)
-	}
-	return saved, nil
 }
 
 func (r *stepGroupRepo) StartGroupsTx(

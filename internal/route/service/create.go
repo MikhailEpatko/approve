@@ -38,21 +38,21 @@ func NewCreateFullRoute(
 	}
 }
 
-func (svc *CreateFullRoute) Execute(request rm.CreateRouteRequest) (int64, error) {
+func (svc *CreateFullRoute) Execute(request rm.CreateRouteRequest) (routeId int64, err error) {
 	tx, err := svc.transaction.Begin()
 	if err != nil {
-		return 0, fmt.Errorf("failed to begin transaction: %w", err)
+		return routeId, fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	routeId, err := svc.createRoute(tx, request)
-	if err != nil {
-		txErr := tx.Rollback()
-		return routeId, fmt.Errorf("failed to create route: %w, %w", err, txErr)
-	}
-	err = tx.Commit()
-	if err != nil {
-		return 0, fmt.Errorf("failed to commit transaction: %w", err)
-	}
-	return routeId, nil
+	defer func() {
+		if err != nil {
+			txErr := tx.Rollback()
+			err = fmt.Errorf("failed to create route: %w, %w", err, txErr)
+		} else {
+			err = tx.Commit()
+		}
+	}()
+	routeId, err = svc.createRoute(tx, request)
+	return routeId, err
 }
 
 func (svc *CreateFullRoute) createRoute(
@@ -80,7 +80,7 @@ func (svc *CreateFullRoute) createStepGroups(
 	for i, group := range groups {
 		toSave[i] = group.ToEntity(routeId)
 	}
-	saved, err := svc.stepGroupRepo.SaveAllTxReturning(tx, toSave)
+	saved, err := svc.stepGroupRepo.SaveAllTx(tx, toSave)
 	if err != nil {
 		return err
 	}
@@ -103,7 +103,7 @@ func (svc *CreateFullRoute) createSteps(
 		}
 		toSave = append(toSave, entities...)
 	}
-	saved, err := svc.stepRepo.SaveAllTxReturning(tx, toSave)
+	saved, err := svc.stepRepo.SaveAllTx(tx, toSave)
 	if err != nil {
 		return err
 	}

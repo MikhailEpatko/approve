@@ -13,6 +13,7 @@ type RouteRepository interface {
 	CopyAsNew(routeTemplateId int64) (int64, error)
 	Update(route RouteEntity) (int64, error)
 	SaveTx(tx *sqlx.Tx, route RouteEntity) (int64, error)
+	StartRouteTx(tx *sqlx.Tx, id int64) error
 }
 
 type routeRepo struct {
@@ -146,4 +147,12 @@ func (r *routeRepo) Update(route RouteEntity) (int64, error) {
 		return 0, err
 	}
 	return res.LastInsertId()
+}
+
+func (r *routeRepo) StartRouteTx(
+	tx *sqlx.Tx,
+	routeId int64,
+) error {
+	_, err := tx.Exec("update route set status = 'STARTED' where id = $1", routeId)
+	return err
 }

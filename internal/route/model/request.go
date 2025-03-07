@@ -16,3 +16,17 @@ func (r CreateRouteTemplateRequest) ToEntity() RouteEntity {
 		Status:      common.TEMPLATE,
 	}
 }
+
+type UpdateRouteRequest struct {
+	Id          int64  `json:"route_id"     validate:"required,min=1"`
+	Name        string `json:"name"         validate:"required,min=3,max=155"`
+	Description string `json:"description"  validate:"max=255"`
+}
+
+func (r UpdateRouteRequest) ToEntity() RouteEntity {
+	return RouteEntity{
+		Id:          r.Id,
+		Name:        r.Name,
+		Description: r.Description,
+	}
+}

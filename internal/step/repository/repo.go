@@ -10,6 +10,8 @@ type StepRepository interface {
 	FindByGroupId(id int64) ([]sm.StepEntity, error)
 	Save(step sm.StepEntity) (int64, error)
 	StartStepsTx(tx *sqlx.Tx, group gm.StepGroupEntity) ([]sm.StepEntity, error)
+	Update(step sm.StepEntity) (int64, error)
+	IsRouteStarted(stepId int64) (bool, error)
 }
 
 type stepRepo struct {
@@ -66,4 +68,32 @@ func (r *stepRepo) StartStepsTx(
 		saved = append(saved, step)
 	}
 	return saved, nil
+}
+
+func (r *stepRepo) Update(step sm.StepEntity) (stepId int64, err error) {
+	_, err = r.db.NamedExec(
+		`update step 
+     set name = :name,
+       number = :number,
+       approver_order = :approver_order
+     where id = :id`,
+		step,
+	)
+	if err == nil {
+		stepId = step.Id
+	}
+	return stepId, err
+}
+
+func (r *stepRepo) IsRouteStarted(stepId int64) (res bool, err error) {
+	err = r.db.Get(
+		&res,
+		`select exists (
+       select 1 from step s 
+       inner join step_group g on g.id = s.step_group_id
+       inner join route r on r.id = g.route_id
+       where s.id = $1 and r.status in ('STARTED', 'FINISHED'))`,
+		stepId,
+	)
+	return res, err
 }

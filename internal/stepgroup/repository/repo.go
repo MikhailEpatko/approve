@@ -1,14 +1,16 @@
 package repository
 
 import (
-	. "approve/internal/stepgroup/model"
+	gm "approve/internal/stepgroup/model"
 	"github.com/jmoiron/sqlx"
 )
 
 type StepGroupRepository interface {
-	FindByRouteId(id int64) ([]StepGroupEntity, error)
-	Save(stepGroup StepGroupEntity) (int64, error)
-	StartGroupsTx(tx *sqlx.Tx, routeId int64) (StepGroupEntity, error)
+	FindByRouteId(id int64) ([]gm.StepGroupEntity, error)
+	Save(stepGroup gm.StepGroupEntity) (int64, error)
+	StartGroupsTx(tx *sqlx.Tx, routeId int64) (gm.StepGroupEntity, error)
+	Update(group gm.StepGroupEntity) (int64, error)
+	IsRouteStarted(stepGroupId int64) (bool, error)
 }
 
 type stepGroupRepo struct {
@@ -19,8 +21,8 @@ func NewStepGroupRepository(db *sqlx.DB) StepGroupRepository {
 	return &stepGroupRepo{db}
 }
 
-func (r *stepGroupRepo) FindByRouteId(id int64) ([]StepGroupEntity, error) {
-	var groups []StepGroupEntity
+func (r *stepGroupRepo) FindByRouteId(id int64) ([]gm.StepGroupEntity, error) {
+	var groups []gm.StepGroupEntity
 	err := r.db.Select(&groups, "select * from step_group where route_id = $1", id)
 	if err != nil {
 		return nil, err
@@ -28,7 +30,7 @@ func (r *stepGroupRepo) FindByRouteId(id int64) ([]StepGroupEntity, error) {
 	return groups, nil
 }
 
-func (r *stepGroupRepo) Save(stepGroup StepGroupEntity) (int64, error) {
+func (r *stepGroupRepo) Save(stepGroup gm.StepGroupEntity) (int64, error) {
 	res, err := r.db.NamedExec(
 		`insert into step_group (route_id, name, number, status, step_order)
      values (:route_id, :name, :number, :status, :step_order)`,
@@ -43,7 +45,7 @@ func (r *stepGroupRepo) Save(stepGroup StepGroupEntity) (int64, error) {
 func (r *stepGroupRepo) StartGroupsTx(
 	tx *sqlx.Tx,
 	routeId int64,
-) (group StepGroupEntity, err error) {
+) (group gm.StepGroupEntity, err error) {
 	rows, err := tx.Queryx(
 		`update step_group 
      set status = 'STARTED'
@@ -55,4 +57,31 @@ func (r *stepGroupRepo) StartGroupsTx(
 		err = rows.Scan(&group)
 	}
 	return group, err
+}
+
+func (r *stepGroupRepo) Update(group gm.StepGroupEntity) (groupId int64, err error) {
+	_, err = r.db.NamedExec(
+		`update step_group 
+     set name = :name,
+       number = :number,
+       step_order = :step_order
+     where id = :id`,
+		group,
+	)
+	if err == nil {
+		groupId = group.Id
+	}
+	return groupId, err
+}
+
+func (r *stepGroupRepo) IsRouteStarted(stepGroupId int64) (res bool, err error) {
+	err = r.db.Get(
+		&res,
+		`select exists (
+       select 1 from step_group g 
+       inner join route r on r.id = g.route_id
+       where g.id = $1 and r.status in ('STARTED', 'FINISHED'))`,
+		stepGroupId,
+	)
+	return res, err
 }

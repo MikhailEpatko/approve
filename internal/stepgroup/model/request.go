@@ -11,12 +11,28 @@ type CreateStepGroupRequest struct {
 	StepOrder common.OrderType `json:"step_order" validate:"required,oneof=PARALLEL_ANY_OF PARALLEL_ALL_OF SEQUENTIAL_ALL_OFF"`
 }
 
-func (request CreateStepGroupRequest) ToEntity() StepGroupEntity {
+func (r CreateStepGroupRequest) ToEntity() StepGroupEntity {
 	return StepGroupEntity{
-		RouteId:   request.RouteId,
-		Name:      request.Name,
-		Number:    request.Number,
+		RouteId:   r.RouteId,
+		Name:      r.Name,
+		Number:    r.Number,
 		Status:    common.TEMPLATE,
-		StepOrder: request.StepOrder,
+		StepOrder: r.StepOrder,
+	}
+}
+
+type UpdateStepGroupRequest struct {
+	Id        int64            `json:"id"         validate:"required,min=1"`
+	Name      string           `json:"name"       validate:"required,min=1,max=155"`
+	Number    int              `json:"number"     validate:"required,min=1,max=10"`
+	StepOrder common.OrderType `json:"step_order" validate:"required,oneof=PARALLEL_ANY_OF PARALLEL_ALL_OF SEQUENTIAL_ALL_OFF"`
+}
+
+func (r UpdateStepGroupRequest) ToEntity() StepGroupEntity {
+	return StepGroupEntity{
+		Id:        r.Id,
+		Name:      r.Name,
+		Number:    r.Number,
+		StepOrder: r.StepOrder,
 	}
 }

@@ -10,6 +10,8 @@ type ApproverRepository interface {
 	FindByStepId(id int64) ([]ApproverEntity, error)
 	Save(approver ApproverEntity) (int64, error)
 	StartApproversTx(tx *sqlx.Tx, step sm.StepEntity) error
+	Update(approver ApproverEntity) (int64, error)
+	IsRouteStarted(approverId int64) (bool, error)
 }
 
 type approverRepo struct {
@@ -51,4 +53,35 @@ func (r *approverRepo) StartApproversTx(
 		step,
 	)
 	return err
+}
+
+func (r *approverRepo) Update(approver ApproverEntity) (approverId int64, err error) {
+	_, err = r.db.NamedExec(
+		`update approver 
+     set name = :name,
+       guid = :guid,
+       position = :position,
+       email = :email,
+       number = :number
+     where id = :id`,
+		approver,
+	)
+	if err == nil {
+		approverId = approver.Id
+	}
+	return approverId, err
+}
+
+func (r *approverRepo) IsRouteStarted(approverId int64) (res bool, err error) {
+	err = r.db.Get(
+		&res,
+		`select exists (
+       select 1 from approver a
+       inner join step s on s.id = a.step_id
+       inner join step_group g on g.id = s.step_group_id
+       inner join route r on r.id = g.route_id
+       where s.id = $1 and r.status in ('STARTED', 'FINISHED'))`,
+		approverId,
+	)
+	return res, err
 }

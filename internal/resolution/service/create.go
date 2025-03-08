@@ -48,7 +48,7 @@ func (svc *CreateResolution) CreateResolution(
 	if err != nil {
 		return 0, fmt.Errorf(ERROR_CREATE_RESOLUTION_W, err)
 	}
-	err = svc.approverRepo.DeativateTx(tx, request.ApproverId)
+	err = svc.approverRepo.FinishApproverTx(tx, request.ApproverId)
 	if err != nil {
 		return 0, fmt.Errorf(ERROR_CREATE_RESOLUTION_W, err)
 	}
@@ -80,8 +80,8 @@ func (svc *CreateResolution) validateRequest(
 		break
 	case info.Guid == "":
 		err = errors.New("approver was not found")
-	case !info.Active:
-		err = errors.New("approver is not active")
+	case info.ApproverStatus != common.STARTED:
+		err = errors.New("approver is not started")
 	case info.StepStatus != common.STARTED:
 		err = errors.New("step is not started")
 	}

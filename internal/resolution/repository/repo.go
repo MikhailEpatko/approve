@@ -84,8 +84,9 @@ func (r *resolutionRepo) ApprovingInfoTx(
 			 s.id as step_id,
 			 s.status as step_status,
 			 s.approver_order as approver_order,
+			 a.id as approver_id,
 			 a.guid as guid,
-			 a.active as active
+			 a.status as approver_status
 		 from approver a
      inner join step s on s.id = a.step_id
 		 inner join step_group sg on sg.id = s.step_group_id

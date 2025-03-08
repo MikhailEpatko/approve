@@ -11,8 +11,10 @@ type ApproverRepository interface {
 	Save(approver ApproverEntity) (int64, error)
 	StartApproversTx(tx *sqlx.Tx, step sm.StepEntity) error
 	Update(approver ApproverEntity) (int64, error)
-	DeativateTx(tx *sqlx.Tx, approverId int64) error
-	DeactivateApproversByRouteId(tx *sqlx.Tx, routeId int64) error
+	FinishApproverTx(tx *sqlx.Tx, approverId int64) error
+	FinishApproversByRouteId(tx *sqlx.Tx, routeId int64) error
+	AreActiveInStepExist(tx *sqlx.Tx, stepId int64) (bool, error)
+	StartActiveApprovers(tx *sqlx.Tx, stepId int64, approverId int64) error
 }
 
 type approverRepo struct {
@@ -47,7 +49,7 @@ func (r *approverRepo) StartApproversTx(
 ) error {
 	_, err := tx.NamedQuery(
 		`update approver 
-     set active = true
+     set status = 'STARTED'
      where step_id = :id 
      and (number = 1 and 'SEQUENTIAL_ALL_OFF' = :approver_order or 'SEQUENTIAL_ALL_OFF' <> :approver_order)
      returning *`,
@@ -73,27 +75,61 @@ func (r *approverRepo) Update(approver ApproverEntity) (approverId int64, err er
 	return approverId, err
 }
 
-func (r *approverRepo) DeativateTx(
+func (r *approverRepo) FinishApproverTx(
 	tx *sqlx.Tx,
 	approverId int64,
 ) error {
-	_, err := tx.Exec("update approver set active = false where id = $1", approverId)
+	_, err := tx.Exec("update approver set status = 'FINISHED' where id = $1", approverId)
 	return err
 }
 
-func (r *approverRepo) DeactivateApproversByRouteId(
+func (r *approverRepo) FinishApproversByRouteId(
 	tx *sqlx.Tx,
 	routeId int64,
 ) error {
 	_, err := tx.Exec(
 		`update approver 
-     set active = false
+     set status = 'FINISHED'
      where step_id in (
        select id from step where step_group_id in (
          select id from step_group where route_id = $1
        )
      )`,
 		routeId,
+	)
+	return err
+}
+
+func (r *approverRepo) AreActiveInStepExist(
+	tx *sqlx.Tx,
+	stepId int64,
+) (bool, error) {
+	var res bool
+	err := tx.Select(
+		&res,
+		`select exists (
+  		 select 1 
+  		 from approver
+		   where step_id = $1 
+		   and status != 'FINISHED'
+		 )`,
+		stepId,
+	)
+	return res, err
+}
+
+func (r *approverRepo) StartActiveApprovers(
+	tx *sqlx.Tx,
+	stepId int64,
+	approverId int64,
+) error {
+	_, err := tx.Exec(
+		`update approver 
+     set status = 'STARTED'
+     where step_id = $1
+     and number = (select number + 1 from approver where id = $2)`,
+		stepId,
+		approverId,
 	)
 	return err
 }

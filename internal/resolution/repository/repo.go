@@ -9,7 +9,8 @@ type ResolutionRepository interface {
 	FindByApproverId(id int64) ([]ResolutionEntity, error)
 	Save(resolution ResolutionEntity) (int64, error)
 	Update(resolution ResolutionEntity) error
-	SaveAllTx(tx *sqlx.Tx, resolutions []ResolutionEntity) error
+	SaveTx(tx *sqlx.Tx, resolution ResolutionEntity) (int64, error)
+	ApprovingInfoTx(tx *sqlx.Tx, approverId int64) (ApprovingInfoEntity, error)
 }
 
 type resolutionRepo struct {
@@ -31,8 +32,8 @@ func (r *resolutionRepo) FindByApproverId(id int64) ([]ResolutionEntity, error) 
 
 func (r *resolutionRepo) Save(resolution ResolutionEntity) (int64, error) {
 	res, err := r.db.NamedExec(
-		`insert into resolution (approver_id, decision, comment)
-     values (:approver_id, :decision, :comment)`,
+		`insert into resolution (approver_id, is_approved, comment)
+     values (:approver_id, :is_approved, :comment)`,
 		&resolution,
 	)
 	if err != nil {
@@ -45,7 +46,7 @@ func (r *resolutionRepo) Update(resolution ResolutionEntity) error {
 	_, err := r.db.NamedExec(
 		`update resolution
      set
-       decision = :decision,
+       is_approved = :is_approved,
        comment = :comment
      where id = :id`,
 		&resolution,
@@ -56,10 +57,41 @@ func (r *resolutionRepo) Update(resolution ResolutionEntity) error {
 	return nil
 }
 
-func (r *resolutionRepo) SaveAllTx(
+func (r *resolutionRepo) SaveTx(
 	tx *sqlx.Tx,
-	resolutions []ResolutionEntity,
-) error {
-	_, err := tx.NamedExec(`insert into resolution (approver_id) values (:approver_id)`, resolutions)
-	return err
+	resolution ResolutionEntity,
+) (int64, error) {
+	res, err := tx.NamedExec(
+		`insert into resolution (approver_id, is_approved, comment)
+     values (:approver_id, :is_approved, :comment)`,
+		resolution,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return res.LastInsertId()
+}
+
+func (r *resolutionRepo) ApprovingInfoTx(
+	tx *sqlx.Tx,
+	approverId int64,
+) (res ApprovingInfoEntity, err error) {
+	err = tx.Get(
+		&res,
+		`select 
+			 r.id as route_id,
+			 sg.id as step_group_id,
+			 s.id as step_id,
+			 s.status as step_status,
+			 s.approver_order as approver_order,
+			 a.guid as guid,
+			 a.active as active
+		 from approver a
+     inner join step s on s.id = a.step_id
+		 inner join step_group sg on sg.id = s.step_group_id
+		 inner join route r on r.id = sg.route_id
+     where a.id = $1`,
+		approverId,
+	)
+	return res, err
 }

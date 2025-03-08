@@ -11,6 +11,7 @@ type StepGroupRepository interface {
 	StartGroupsTx(tx *sqlx.Tx, routeId int64) (gm.StepGroupEntity, error)
 	Update(group gm.StepGroupEntity) (int64, error)
 	IsRouteStarted(stepGroupId int64) (bool, error)
+	FinishGroupsByRouteId(tx *sqlx.Tx, routeId int64) error
 }
 
 type stepGroupRepo struct {
@@ -84,4 +85,17 @@ func (r *stepGroupRepo) IsRouteStarted(stepGroupId int64) (res bool, err error) 
 		stepGroupId,
 	)
 	return res, err
+}
+
+func (r *stepGroupRepo) FinishGroupsByRouteId(
+	tx *sqlx.Tx,
+	routeId int64,
+) error {
+	_, err := tx.Exec(
+		`update step_group 
+     set status = 'FINISHED'
+     where route_id = $1`,
+		routeId,
+	)
+	return err
 }

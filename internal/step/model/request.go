@@ -8,7 +8,7 @@ type CreateStepRequest struct {
 	StepGroupId   int64            `json:"step_group_id"  validate:"required,min=1,max=10"`
 	Name          string           `json:"name"           validate:"required,min=1,max=155"`
 	Number        int              `json:"number"         validate:"required,min=1,max=20"`
-	ApproverOrder common.OrderType `json:"approver_order" validate:"required, oneof=PARALLEL_ANY_OF PARALLEL_ALL_OF SEQUENTIAL_ALL_OFF"`
+	ApproverOrder common.OrderType `json:"approver_order" validate:"required, oneof=PARALLEL_ANY_OF PARALLEL_ALL_OF SERIAL"`
 }
 
 func (r CreateStepRequest) ToEntity() StepEntity {
@@ -25,7 +25,7 @@ type UpdateStepRequest struct {
 	Id            int64            `json:"route_id"       validate:"required,min=1"`
 	Name          string           `json:"name"           validate:"required,min=1,max=155"`
 	Number        int              `json:"number"         validate:"required,min=1,max=20"`
-	ApproverOrder common.OrderType `json:"approver_order" validate:"required, oneof=PARALLEL_ANY_OF PARALLEL_ALL_OF SEQUENTIAL_ALL_OFF"`
+	ApproverOrder common.OrderType `json:"approver_order" validate:"required, oneof=PARALLEL_ANY_OF PARALLEL_ALL_OF SERIAL"`
 }
 
 func (r UpdateStepRequest) ToEntity() StepEntity {

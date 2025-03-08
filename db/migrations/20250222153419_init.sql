@@ -23,16 +23,16 @@ create or replace rule soft_delete_route as
 create table if not exists step_group
 (
   id          bigint primary key generated always as identity,
-  route_id    bigint                    not null
+  route_id    bigint                         not null
     constraint fk_route_id
       references route
       on delete cascade,
-  name        text                      not null,
-  number      int                       not null,
-  step_order  order_type_enum           not null,
-  status      status_enum default 'NEW' not null,
-  is_approved boolean     default false not null,
-  deleted     boolean     default false not null,
+  name        text                           not null,
+  number      int                            not null,
+  step_order  order_type_enum                not null,
+  status      status_enum default 'TEMPLATE' not null,
+  is_approved boolean     default false      not null,
+  deleted     boolean     default false      not null,
   unique (route_id, number)
 );
 
@@ -45,16 +45,16 @@ create or replace rule soft_delete_step_group as
 create table if not exists step
 (
   id             bigint primary key generated always as identity,
-  step_group_id  bigint                    not null
+  step_group_id  bigint                         not null
     constraint fk_step_group_id
       references step_group
       on delete cascade,
-  name           text                      not null,
-  number         int                       not null,
-  status         status_enum default 'NEW' not null,
-  approver_order order_type_enum           not null,
-  is_approved    boolean     default false not null,
-  deleted        boolean     default false not null,
+  name           text                           not null,
+  number         int                            not null,
+  status         status_enum default 'TEMPLATE' not null,
+  approver_order order_type_enum                not null,
+  is_approved    boolean     default false      not null,
+  deleted        boolean     default false      not null,
   unique (step_group_id, number)
 );
 
@@ -67,17 +67,17 @@ create or replace rule soft_delete_step as
 create table if not exists approver
 (
   id       bigint primary key generated always as identity,
-  step_id  bigint                not null
+  step_id  bigint                         not null
     constraint fk_step_id
       references step
       on delete cascade,
-  guid     text                  not null,
-  name     text                  not null,
-  position text                  not null,
-  email    text                  not null,
-  number   int                   not null,
-  active   boolean default false not null,
-  deleted  boolean default false not null,
+  guid     text                           not null,
+  name     text                           not null,
+  position text                           not null,
+  email    text                           not null,
+  number   int                            not null,
+  status   status_enum default 'TEMPLATE' not null,
+  deleted  boolean     default false      not null,
   unique (step_id, number)
 );
 

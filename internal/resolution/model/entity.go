@@ -11,11 +11,12 @@ type ResolutionEntity struct {
 }
 
 type ApprovingInfoEntity struct {
-	RouteId       int64            `db:"route_id"`
-	StepGroupId   int64            `db:"step_group_id"`
-	StepId        int64            `db:"step_id"`
-	StepStatus    common.Status    `db:"step_status"`
-	ApproverOrder common.OrderType `db:"approver_order"`
-	Guid          string           `db:"guid"`
-	Active        bool             `db:"active"`
+	RouteId        int64            `db:"route_id"`
+	StepGroupId    int64            `db:"step_group_id"`
+	StepId         int64            `db:"step_id"`
+	StepStatus     common.Status    `db:"step_status"`
+	ApproverOrder  common.OrderType `db:"approver_order"`
+	ApproverId     int64            `db:"approver_id"`
+	Guid           string           `db:"guid"`
+	ApproverStatus common.Status    `db:"approver_status"`
 }

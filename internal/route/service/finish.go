@@ -21,7 +21,7 @@ func (svc FinishRoute) Execute(
 	info resm.ApprovingInfoEntity,
 	isRouteApproved bool,
 ) (err error) {
-	err = svc.approverRepo.DeactivateApproversByRouteId(tx, info.RouteId)
+	err = svc.approverRepo.FinishApproversByRouteId(tx, info.RouteId)
 	if err != nil {
 		return err
 	}

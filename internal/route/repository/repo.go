@@ -10,6 +10,7 @@ type RouteRepository interface {
 	StartRouteTx(tx *sqlx.Tx, id int64) error
 	Update(route rm.RouteEntity) (int64, error)
 	IsRouteStarted(routeId int64) (bool, error)
+	FinishRoute(tx *sqlx.Tx, routeId int64, isRouteApproved bool) error
 }
 
 type routeRepo struct {
@@ -62,4 +63,21 @@ func (r *routeRepo) IsRouteStarted(routeId int64) (res bool, err error) {
 		routeId,
 	)
 	return res, err
+}
+
+func (r *routeRepo) FinishRoute(
+	tx *sqlx.Tx,
+	routeId int64,
+	isRouteApproved bool,
+) error {
+	_, err := tx.Exec(
+		`update route 
+     set 
+       status = 'FINISHED',
+       is_approved = $2
+     where id = $1`,
+		routeId,
+		isRouteApproved,
+	)
+	return err
 }

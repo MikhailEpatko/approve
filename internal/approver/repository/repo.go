@@ -11,7 +11,8 @@ type ApproverRepository interface {
 	Save(approver ApproverEntity) (int64, error)
 	StartApproversTx(tx *sqlx.Tx, step sm.StepEntity) error
 	Update(approver ApproverEntity) (int64, error)
-	IsRouteStarted(approverId int64) (bool, error)
+	DeativateTx(tx *sqlx.Tx, approverId int64) error
+	DeactivateApproversByRouteId(tx *sqlx.Tx, routeId int64) error
 }
 
 type approverRepo struct {
@@ -72,16 +73,27 @@ func (r *approverRepo) Update(approver ApproverEntity) (approverId int64, err er
 	return approverId, err
 }
 
-func (r *approverRepo) IsRouteStarted(approverId int64) (res bool, err error) {
-	err = r.db.Get(
-		&res,
-		`select exists (
-       select 1 from approver a
-       inner join step s on s.id = a.step_id
-       inner join step_group g on g.id = s.step_group_id
-       inner join route r on r.id = g.route_id
-       where s.id = $1 and r.status in ('STARTED', 'FINISHED'))`,
-		approverId,
+func (r *approverRepo) DeativateTx(
+	tx *sqlx.Tx,
+	approverId int64,
+) error {
+	_, err := tx.Exec("update approver set active = false where id = $1", approverId)
+	return err
+}
+
+func (r *approverRepo) DeactivateApproversByRouteId(
+	tx *sqlx.Tx,
+	routeId int64,
+) error {
+	_, err := tx.Exec(
+		`update approver 
+     set active = false
+     where step_id in (
+       select id from step where step_group_id in (
+         select id from step_group where route_id = $1
+       )
+     )`,
+		routeId,
 	)
-	return res, err
+	return err
 }

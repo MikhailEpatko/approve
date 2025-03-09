@@ -5,7 +5,7 @@ import (
 	"approve/internal/common"
 	resm "approve/internal/resolution/model"
 	resr "approve/internal/resolution/repository"
-	service2 "approve/internal/step/service"
+	ss "approve/internal/step/service"
 	"errors"
 	"fmt"
 	"github.com/jmoiron/sqlx"
@@ -20,9 +20,9 @@ type CreateResolution struct {
 	transaction           common.Transaction
 	approverRepo          ar.ApproverRepository
 	resolutionRepo        resr.ResolutionRepository
-	processeParallelAllOf service2.ProcessParallelAllOf
-	processParallelAnyOf  service2.ProcessParallelAnyOf
-	processSerial         service2.ProcessSerialStep
+	processeParallelAllOf ss.ProcessParallelAllOf
+	processParallelAnyOf  ss.ProcessParallelAnyOf
+	processSerial         ss.ProcessSerialStep
 }
 
 func (svc *CreateResolution) CreateResolution(
@@ -64,7 +64,6 @@ func (svc *CreateResolution) CreateResolution(
 		return 0, fmt.Errorf(ERROR_CREATE_RESOLUTION_W, err)
 	}
 	return resolutionId, nil
-
 }
 
 func (svc *CreateResolution) validateRequest(

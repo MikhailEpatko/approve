@@ -4,25 +4,42 @@ import (
 	"approve/internal/common"
 	sm "approve/internal/step/model"
 	gm "approve/internal/stepgroup/model"
+
 	"github.com/jmoiron/sqlx"
 )
 
 type StepRepository interface {
 	FindByGroupId(id int64) ([]sm.StepEntity, error)
 	Save(step sm.StepEntity) (int64, error)
-	StartStepsTx(tx *sqlx.Tx, group gm.StepGroupEntity) ([]sm.StepEntity, error)
+	StartStepsTx(
+		tx *sqlx.Tx,
+		group gm.StepGroupEntity,
+	) ([]sm.StepEntity, error)
 	Update(step sm.StepEntity) (int64, error)
 	IsRouteStarted(stepId int64) (bool, error)
-	FinishStepsByRouteId(tx *sqlx.Tx, routeId int64) error
-	FinishStep(tx *sqlx.Tx, stepId int64) error
+	FinishStepsByRouteId(
+		tx *sqlx.Tx,
+		routeId int64,
+	) error
+	FinishStep(
+		tx *sqlx.Tx,
+		stepId int64,
+	) error
 	CalculateAndSetIsApproved(
 		tx *sqlx.Tx,
 		stepId int64,
 		approverOrder common.OrderType,
 		isResolutionApproved bool,
 	) (res bool, err error)
-	ExistsNotFinishedStepsInGroup(tx *sqlx.Tx, stepGroupId int64) (bool, error)
-	StartNextStepTx(tx *sqlx.Tx, stepGroupId int64, stepId int64) (int64, error)
+	ExistsNotFinishedStepsInGroup(
+		tx *sqlx.Tx,
+		stepGroupId int64,
+	) (bool, error)
+	StartNextStepTx(
+		tx *sqlx.Tx,
+		stepGroupId int64,
+		stepId int64,
+	) (int64, error)
 }
 
 type stepRepo struct {
@@ -144,19 +161,19 @@ func (r *stepRepo) CalculateAndSetIsApproved(
 					when $1 = 'PARALLEL_ANY_OF' and not $2 then exists (
 						select 1
 							from resolution r
-										 inner join approver a on r.approver_id = a.id
-										 inner join step s on a.step_id = s.id
+							inner join approver a on r.approver_id = a.id
+							inner join step s on a.step_id = s.id
 							where s.id = $3
-								and r.is_approved = true
+							and r.is_approved = true
 					)
 					when $1 <> 'PARALLEL_ANY_OF' and not $2 then false
 					else not exists (
 						select 1
 						from resolution r
-							inner join approver a on r.approver_id = a.id
-							inner join step s on a.step_id = s.id
+						inner join approver a on r.approver_id = a.id
+						inner join step s on a.step_id = s.id
 						where s.id = $3
-							and r.is_approved = false
+						and r.is_approved = false
 					)
 				end
 			)

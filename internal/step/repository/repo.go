@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"approve/internal/common"
 	sm "approve/internal/step/model"
 	gm "approve/internal/stepgroup/model"
 	"github.com/jmoiron/sqlx"
@@ -13,6 +14,15 @@ type StepRepository interface {
 	Update(step sm.StepEntity) (int64, error)
 	IsRouteStarted(stepId int64) (bool, error)
 	FinishStepsByRouteId(tx *sqlx.Tx, routeId int64) error
+	FinishStep(tx *sqlx.Tx, stepId int64) error
+	CalculateAndSetIsApproved(
+		tx *sqlx.Tx,
+		stepId int64,
+		approverOrder common.OrderType,
+		isResolutionApproved bool,
+	) (res bool, err error)
+	ExistsNotFinishedStepsInGroup(tx *sqlx.Tx, stepGroupId int64) (bool, error)
+	StartNextStepTx(tx *sqlx.Tx, stepGroupId int64, stepId int64) (int64, error)
 }
 
 type stepRepo struct {
@@ -26,10 +36,7 @@ func NewStepRepository(db *sqlx.DB) StepRepository {
 func (r *stepRepo) FindByGroupId(id int64) ([]sm.StepEntity, error) {
 	var steps []sm.StepEntity
 	err := r.db.Select(&steps, "select * from step where step_group_id = $1", id)
-	if err != nil {
-		return nil, err
-	}
-	return steps, nil
+	return steps, err
 }
 
 func (r *stepRepo) Save(step sm.StepEntity) (int64, error) {
@@ -52,7 +59,7 @@ func (r *stepRepo) StartStepsTx(
 		`update step 
      set status = 'STARTED'
      where step_group_id = :id 
-     and (number = 1 and 'SEQUENTIAL_ALL_OFF' = :step_order or 'SEQUENTIAL_ALL_OFF' <> :step_order)
+     and (number = 1 and 'SERIAL' = :step_order or 'SERIAL' <> :step_order)
      returning *`,
 		group,
 	)
@@ -112,4 +119,82 @@ func (r *stepRepo) FinishStepsByRouteId(
 		routeId,
 	)
 	return err
+}
+
+func (r *stepRepo) FinishStep(
+	tx *sqlx.Tx,
+	stepId int64,
+) error {
+	_, err := tx.Exec("update step set status = 'FINISHED' where id = $1", stepId)
+	return err
+}
+
+func (r *stepRepo) CalculateAndSetIsApproved(
+	tx *sqlx.Tx,
+	stepId int64,
+	approverOrder common.OrderType,
+	isResolutionApproved bool,
+) (res bool, err error) {
+	err = tx.Get(
+		&res,
+		`update step
+			set is_approved = (
+				case
+					when $1 = 'PARALLEL_ANY_OF' and $2 then true
+					when $1 = 'PARALLEL_ANY_OF' and not $2 then exists (
+						select 1
+							from resolution r
+										 inner join approver a on r.approver_id = a.id
+										 inner join step s on a.step_id = s.id
+							where s.id = $3
+								and r.is_approved = true
+					)
+					when $1 <> 'PARALLEL_ANY_OF' and not $2 then false
+					else not exists (
+						select 1
+						from resolution r
+							inner join approver a on r.approver_id = a.id
+							inner join step s on a.step_id = s.id
+						where s.id = $3
+							and r.is_approved = false
+					)
+				end
+			)
+			where id = $3
+			returning is_approved`,
+		approverOrder,
+		isResolutionApproved,
+		stepId,
+	)
+	return res, err
+}
+
+func (r *stepRepo) ExistsNotFinishedStepsInGroup(
+	tx *sqlx.Tx,
+	stepGroupId int64,
+) (res bool, err error) {
+	err = tx.Select(
+		&res,
+		"select exists (select 1 from step where step.step_group_id = $1 and status != 'FINISHED')",
+		stepGroupId,
+	)
+	return res, err
+}
+
+func (r *stepRepo) StartNextStepTx(
+	tx *sqlx.Tx,
+	stepGroupId int64,
+	stepId int64,
+) (nextStepId int64, err error) {
+	err = tx.Get(
+		&nextStepId,
+		`update step 
+     set status = 'STARTED'
+     where step_group_id = $1
+     and number = (select number + 1 from step where id = $2)
+     returning id`,
+		stepGroupId,
+		stepId,
+	)
+	return nextStepId, err
 }

@@ -23,14 +23,16 @@ func (svc *ProcessSerialStep) Execute(
 	if !isResolutionApproved {
 		return svc.finishRoute.Execute(tx, info, isResolutionApproved)
 	}
-	activeApproversExist, err := svc.approverRepo.AreActiveInStepExist(tx, info.StepId)
+	existsNotFinishedApprovers, err := svc.approverRepo.ExistNotFinishedApproversInStep(tx, info.StepId)
 	if err != nil {
 		return fmt.Errorf("find approver to activate error: %w", err)
 	}
-	if activeApproversExist && info.ApproverOrder == common.SERIAL {
-		err = svc.approverRepo.StartActiveApprovers(tx, info.StepId, info.ApproverId)
+	if existsNotFinishedApprovers {
+		if info.ApproverOrder == common.SERIAL {
+			err = svc.approverRepo.StartNextApprover(tx, info.StepId, info.ApproverId)
+		}
 	} else {
-		err = svc.finishStepAndStartNext.Execute(tx, info)
+		err = svc.finishStepAndStartNext.Execute(tx, info, isResolutionApproved)
 	}
 	return err
 }

@@ -22,24 +22,6 @@ type StartRoute struct {
 	resolutionRepo resr.ResolutionRepository
 }
 
-func NewStartRoute(
-	transaction common.Transaction,
-	routeRepo rr.RouteRepository,
-	stepGroupRepo gr.StepGroupRepository,
-	stepRepo sr.StepRepository,
-	approverRepo ar.ApproverRepository,
-	resolutionRepo resr.ResolutionRepository,
-) *StartRoute {
-	return &StartRoute{
-		transaction:    transaction,
-		routeRepo:      routeRepo,
-		stepGroupRepo:  stepGroupRepo,
-		stepRepo:       stepRepo,
-		approverRepo:   approverRepo,
-		resolutionRepo: resolutionRepo,
-	}
-}
-
 func (svc *StartRoute) Execute(routeId int64) (err error) {
 	tx, err := svc.transaction.Begin()
 	if err != nil {
@@ -99,5 +81,5 @@ func (svc *StartRoute) startApprovers(
 	tx *sqlx.Tx,
 	step sm.StepEntity,
 ) error {
-	return svc.approverRepo.StartApproversTx(tx, step)
+	return svc.approverRepo.StartApproversTx(tx, step.Id)
 }

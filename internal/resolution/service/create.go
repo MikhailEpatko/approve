@@ -86,7 +86,7 @@ func (svc *CreateResolution) validateRequest(
 		err = errors.New("step is not started")
 	}
 
-	//TODO: check if requester is approver (has approver's guid in jwt token)
+	// TODO: check if requester is approver (has approver's guid in jwt token)
 
 	return info, err
 }

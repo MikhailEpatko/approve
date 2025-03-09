@@ -2,19 +2,18 @@ package repository
 
 import (
 	. "approve/internal/approver/model"
-	sm "approve/internal/step/model"
 	"github.com/jmoiron/sqlx"
 )
 
 type ApproverRepository interface {
 	FindByStepId(id int64) ([]ApproverEntity, error)
 	Save(approver ApproverEntity) (int64, error)
-	StartApproversTx(tx *sqlx.Tx, step sm.StepEntity) error
+	StartApproversTx(tx *sqlx.Tx, stepId int64) error
 	Update(approver ApproverEntity) (int64, error)
 	FinishApproverTx(tx *sqlx.Tx, approverId int64) error
 	FinishApproversByRouteId(tx *sqlx.Tx, routeId int64) error
-	AreActiveInStepExist(tx *sqlx.Tx, stepId int64) (bool, error)
-	StartActiveApprovers(tx *sqlx.Tx, stepId int64, approverId int64) error
+	ExistNotFinishedApproversInStep(tx *sqlx.Tx, stepId int64) (bool, error)
+	StartNextApprover(tx *sqlx.Tx, stepId int64, approverId int64) error
 }
 
 type approverRepo struct {
@@ -45,15 +44,14 @@ func (r *approverRepo) Save(approver ApproverEntity) (int64, error) {
 
 func (r *approverRepo) StartApproversTx(
 	tx *sqlx.Tx,
-	step sm.StepEntity,
+	stepId int64,
 ) error {
-	_, err := tx.NamedQuery(
+	_, err := tx.Exec(
 		`update approver 
      set status = 'STARTED'
-     where step_id = :id 
-     and (number = 1 and 'SEQUENTIAL_ALL_OFF' = :approver_order or 'SEQUENTIAL_ALL_OFF' <> :approver_order)
-     returning *`,
-		step,
+     where step_id = $1 
+     and (number = 1 and 'SERIAL' = :approver_order or 'SERIAL' <> :approver_order)`,
+		stepId,
 	)
 	return err
 }
@@ -100,25 +98,20 @@ func (r *approverRepo) FinishApproversByRouteId(
 	return err
 }
 
-func (r *approverRepo) AreActiveInStepExist(
+func (r *approverRepo) ExistNotFinishedApproversInStep(
 	tx *sqlx.Tx,
 	stepId int64,
 ) (bool, error) {
 	var res bool
 	err := tx.Select(
 		&res,
-		`select exists (
-  		 select 1 
-  		 from approver
-		   where step_id = $1 
-		   and status != 'FINISHED'
-		 )`,
+		"select exists (select 1 from approver where step_id = $1 and status != 'FINISHED')",
 		stepId,
 	)
 	return res, err
 }
 
-func (r *approverRepo) StartActiveApprovers(
+func (r *approverRepo) StartNextApprover(
 	tx *sqlx.Tx,
 	stepId int64,
 	approverId int64,

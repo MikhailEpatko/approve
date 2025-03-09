@@ -55,7 +55,7 @@ func (r *stepGroupRepo) StartGroupsTx(
 		routeId,
 	)
 	if err == nil && rows.Next() {
-		err = rows.Scan(&group)
+		err = rows.StructScan(&group)
 	}
 	return group, err
 }

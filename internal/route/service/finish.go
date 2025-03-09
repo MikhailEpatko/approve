@@ -33,5 +33,6 @@ func (svc FinishRoute) Execute(
 	if err != nil {
 		return err
 	}
+	// TODO: calculate isRouteApproved here
 	return svc.routeRepo.FinishRoute(tx, info.RouteId, isRouteApproved)
 }

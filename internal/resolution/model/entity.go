@@ -13,6 +13,7 @@ type ResolutionEntity struct {
 type ApprovingInfoEntity struct {
 	RouteId        int64            `db:"route_id"`
 	StepGroupId    int64            `db:"step_group_id"`
+	StepOrder      common.OrderType `db:"step_order"`
 	StepId         int64            `db:"step_id"`
 	StepStatus     common.Status    `db:"step_status"`
 	ApproverOrder  common.OrderType `db:"approver_order"`

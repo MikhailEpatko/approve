@@ -15,18 +15,17 @@ create table if not exists route
 );
 
 create or replace rule soft_delete_route as
-  on delete to route do instead
-  update route
-  set deleted = true
-  where id = old.id;
+  on delete to route
+  where old.status in ('STARTED', 'FINISHED')
+  do instead
+  update route set deleted = true where id = old.id;
 
 create table if not exists step_group
 (
   id          bigint primary key generated always as identity,
   route_id    bigint                         not null
     constraint fk_route_id
-      references route
-      on delete cascade,
+      references route,
   name        text                           not null,
   number      int                            not null,
   step_order  order_type_enum                not null,
@@ -37,18 +36,17 @@ create table if not exists step_group
 );
 
 create or replace rule soft_delete_step_group as
-  on delete to step_group do instead
-  update step_group
-  set deleted = true
-  where id = old.id;
+  on delete to step_group
+  where old.status in ('STARTED', 'FINISHED')
+  do instead
+  update step_group set deleted = true where id = old.id;
 
 create table if not exists step
 (
   id             bigint primary key generated always as identity,
   step_group_id  bigint                         not null
     constraint fk_step_group_id
-      references step_group
-      on delete cascade,
+      references step_group,
   name           text                           not null,
   number         int                            not null,
   status         status_enum default 'TEMPLATE' not null,
@@ -59,18 +57,17 @@ create table if not exists step
 );
 
 create or replace rule soft_delete_step as
-  on delete to step do instead
-  update step
-  set deleted = true
-  where id = old.id;
+  on delete to step
+  where old.status in ('STARTED', 'FINISHED')
+  do instead
+  update step set deleted = true where id = old.id;
 
 create table if not exists approver
 (
   id       bigint primary key generated always as identity,
   step_id  bigint                         not null
     constraint fk_step_id
-      references step
-      on delete cascade,
+      references step,
   guid     text                           not null,
   name     text                           not null,
   position text                           not null,
@@ -82,18 +79,17 @@ create table if not exists approver
 );
 
 create or replace rule soft_delete_approver as
-  on delete to approver do instead
-  update approver
-  set deleted = true
-  where id = old.id;
+  on delete to approver
+  where old.status in ('STARTED', 'FINISHED')
+  do instead
+  update approver set deleted = true where id = old.id;
 
 create table if not exists resolution
 (
   id          bigint primary key generated always as identity,
   approver_id bigint                not null
     constraint fk_approver_id
-      references approver
-      on delete cascade,
+      references approver,
   is_approved boolean               not null,
   comment     text    default ''    not null,
   deleted     boolean default false not null

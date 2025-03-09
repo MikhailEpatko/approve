@@ -11,35 +11,19 @@ import (
 type StepRepository interface {
 	FindByGroupId(id int64) ([]sm.StepEntity, error)
 	Save(step sm.StepEntity) (int64, error)
-	StartStepsTx(
-		tx *sqlx.Tx,
-		group gm.StepGroupEntity,
-	) ([]sm.StepEntity, error)
+	StartStepsTx(tx *sqlx.Tx, group gm.StepGroupEntity) ([]sm.StepEntity, error)
 	Update(step sm.StepEntity) (int64, error)
 	IsRouteStarted(stepId int64) (bool, error)
-	FinishStepsByRouteId(
-		tx *sqlx.Tx,
-		routeId int64,
-	) error
-	FinishStep(
-		tx *sqlx.Tx,
-		stepId int64,
-	) error
+	FinishStepsByRouteId(tx *sqlx.Tx, routeId int64) error
+	FinishStep(tx *sqlx.Tx, stepId int64) error
 	CalculateAndSetIsApproved(
 		tx *sqlx.Tx,
 		stepId int64,
 		approverOrder common.OrderType,
 		isResolutionApproved bool,
 	) (res bool, err error)
-	ExistsNotFinishedStepsInGroup(
-		tx *sqlx.Tx,
-		stepGroupId int64,
-	) (bool, error)
-	StartNextStepTx(
-		tx *sqlx.Tx,
-		stepGroupId int64,
-		stepId int64,
-	) (int64, error)
+	ExistsNotFinishedStepsInGroup(x *sqlx.Tx, stepGroupId int64) (bool, error)
+	StartNextStepTx(tx *sqlx.Tx, stepGroupId int64, stepId int64) (int64, error)
 }
 
 type stepRepo struct {

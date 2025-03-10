@@ -18,9 +18,9 @@ func SafeExecuteBool(err error, f func() (bool, error)) (bool, error) {
 
 func ErrorOrNil(msg string, err error) error {
 	if err != nil {
-		return fmt.Errorf("%s: %w", msg, err)
+		err = fmt.Errorf("%s: %w", msg, err)
 	}
-	return nil
+	return err
 }
 
 func SafeExecuteInt64(err error, f func() (int64, error)) (int64, error) {

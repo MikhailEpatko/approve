@@ -46,10 +46,7 @@ func (r *stepRepo) Save(step sm.StepEntity) (int64, error) {
      values (:step_group_id, :name, :number, :status, :approver_order)`,
 		&step,
 	)
-	if err != nil {
-		return 0, err
-	}
-	return res.LastInsertId()
+	return common.SafeExecuteInt64(err, func() (int64, error) { return res.LastInsertId() })
 }
 
 func (r *stepRepo) StartStepsTx(
@@ -64,19 +61,15 @@ func (r *stepRepo) StartStepsTx(
      returning *`,
 		group,
 	)
-	if err != nil {
-		return nil, err
-	}
-	saved := make([]sm.StepEntity, 0)
-	step := sm.StepEntity{}
-	for rows.Next() {
+	var saved []sm.StepEntity
+	for err == nil && rows.Next() {
+		var step sm.StepEntity
 		err = rows.StructScan(&step)
-		if err != nil {
-			return nil, err
+		if rows.StructScan(&step) == nil {
+			saved = append(saved, step)
 		}
-		saved = append(saved, step)
 	}
-	return saved, nil
+	return saved, err
 }
 
 func (r *stepRepo) Update(step sm.StepEntity) (stepId int64, err error) {

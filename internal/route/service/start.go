@@ -2,7 +2,7 @@ package service
 
 import (
 	ar "approve/internal/approver/repository"
-	"approve/internal/common"
+	cm "approve/internal/common"
 	resr "approve/internal/resolution/repository"
 	rr "approve/internal/route/repository"
 	sm "approve/internal/step/model"
@@ -14,7 +14,7 @@ import (
 )
 
 type StartRoute struct {
-	transaction    common.Transaction
+	transaction    cm.Transaction
 	routeRepo      rr.RouteRepository
 	stepGroupRepo  gr.StepGroupRepository
 	stepRepo       sr.StepRepository
@@ -24,9 +24,6 @@ type StartRoute struct {
 
 func (svc *StartRoute) Execute(routeId int64) (err error) {
 	tx, err := svc.transaction.Begin()
-	if err != nil {
-		return fmt.Errorf("failed to begin transaction: %w", err)
-	}
 	defer func() {
 		if err != nil {
 			txErr := tx.Rollback()
@@ -35,8 +32,7 @@ func (svc *StartRoute) Execute(routeId int64) (err error) {
 			err = tx.Commit()
 		}
 	}()
-	err = svc.startRote(tx, routeId)
-	return err
+	return cm.SafeExecute(err, func() error { return svc.startRote(tx, routeId) })
 }
 
 func (svc *StartRoute) startRote(
@@ -44,10 +40,7 @@ func (svc *StartRoute) startRote(
 	routeId int64,
 ) error {
 	err := svc.routeRepo.StartRouteTx(tx, routeId)
-	if err == nil {
-		err = svc.stargGroups(tx, routeId)
-	}
-	return err
+	return cm.SafeExecute(err, func() error { return svc.stargGroups(tx, routeId) })
 }
 
 func (svc *StartRoute) stargGroups(
@@ -81,5 +74,5 @@ func (svc *StartRoute) startApprovers(
 	tx *sqlx.Tx,
 	step sm.StepEntity,
 ) error {
-	return svc.approverRepo.StartApproversTx(tx, step.Id)
+	return svc.approverRepo.StartStepApprovers(tx, step.Id)
 }

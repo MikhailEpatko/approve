@@ -2,7 +2,7 @@ package service
 
 import (
 	ar "approve/internal/approver/repository"
-	"approve/internal/common"
+	cm "approve/internal/common"
 	resm "approve/internal/resolution/model"
 	resr "approve/internal/resolution/repository"
 	ss "approve/internal/step/service"
@@ -17,21 +17,17 @@ const (
 )
 
 type CreateResolution struct {
-	transaction           common.Transaction
-	approverRepo          ar.ApproverRepository
-	resolutionRepo        resr.ResolutionRepository
-	processeParallelAllOf ss.ProcessParallelAllOf
-	processParallelAnyOf  ss.ProcessParallelAnyOf
-	processSerial         ss.ProcessSerialStep
+	transaction    cm.Transaction
+	approverRepo   ar.ApproverRepository
+	resolutionRepo resr.ResolutionRepository
+	processAnyOf   ss.ProcessAnyOfStep
+	processAllOf   ss.ProcessAllOffStep
 }
 
 func (svc *CreateResolution) CreateResolution(
 	request resm.CreateResolutionRequest,
 ) (resolutionId int64, err error) {
 	tx, err := svc.transaction.Begin()
-	if err != nil {
-		return resolutionId, fmt.Errorf("failed to begin transaction: %w", err)
-	}
 	defer func() {
 		if err != nil {
 			txErr := tx.Rollback()
@@ -40,36 +36,29 @@ func (svc *CreateResolution) CreateResolution(
 			err = tx.Commit()
 		}
 	}()
-	info, err := svc.validateRequest(tx, request)
-	if err != nil {
-		return 0, fmt.Errorf(ERROR_CREATE_RESOLUTION_W, err)
+	info, err := SafeExecuteInfo(err, func() (resm.ApprovingInfoEntity, error) {
+		return svc.validateRequest(tx, request)
+	})
+	resolutionId, err = cm.SafeExecuteInt64(err, func() (int64, error) {
+		return svc.resolutionRepo.SaveTx(tx, request.ToEntity())
+	})
+	err = cm.SafeExecute(err, func() error { return svc.approverRepo.FinishApprover(tx, request.ApproverId) })
+	if err == nil {
+		switch info.ApproverOrder {
+		case cm.PARALLEL_ALL_OF, cm.SERIAL:
+			err = svc.processAllOf.Execute(tx, info, request.IsApproved)
+		case cm.PARALLEL_ANY_OF:
+			err = svc.processAnyOf.Execute(tx, info, request.IsApproved)
+		}
 	}
-	resolutionId, err = svc.resolutionRepo.SaveTx(tx, request.ToEntity())
-	if err != nil {
-		return 0, fmt.Errorf(ERROR_CREATE_RESOLUTION_W, err)
-	}
-	err = svc.approverRepo.FinishApproverTx(tx, request.ApproverId)
-	if err != nil {
-		return 0, fmt.Errorf(ERROR_CREATE_RESOLUTION_W, err)
-	}
-	switch info.ApproverOrder {
-	case common.PARALLEL_ALL_OF:
-		err = svc.processeParallelAllOf.Execute(tx, info, request.IsApproved)
-	case common.PARALLEL_ANY_OF:
-		err = svc.processParallelAnyOf.Execute(tx, info, request.IsApproved)
-	case common.SERIAL:
-		err = svc.processSerial.Execute(tx, info, request.IsApproved)
-	}
-	if err != nil {
-		return 0, fmt.Errorf(ERROR_CREATE_RESOLUTION_W, err)
-	}
-	return resolutionId, nil
+	return resolutionId, cm.ErrorOrNil(ERROR_CREATE_RESOLUTION_W, err)
 }
 
 func (svc *CreateResolution) validateRequest(
 	tx *sqlx.Tx,
 	request resm.CreateResolutionRequest,
 ) (info resm.ApprovingInfoEntity, err error) {
+	// TODO: check if requester is approver (has approver's guid in jwt token)
 	if !request.IsApproved && strings.TrimSpace(request.Comment) == "" {
 		return info, errors.New("comment should be provided")
 	}
@@ -79,13 +68,17 @@ func (svc *CreateResolution) validateRequest(
 		break
 	case info.Guid == "":
 		err = errors.New("approver was not found")
-	case info.ApproverStatus != common.STARTED:
+	case info.ApproverStatus != cm.STARTED:
 		err = errors.New("approver is not started")
-	case info.StepStatus != common.STARTED:
+	case info.StepStatus != cm.STARTED:
 		err = errors.New("step is not started")
 	}
-
-	// TODO: check if requester is approver (has approver's guid in jwt token)
-
 	return info, err
+}
+
+func SafeExecuteInfo(err error, f func() (resm.ApprovingInfoEntity, error)) (resm.ApprovingInfoEntity, error) {
+	if err != nil {
+		return resm.ApprovingInfoEntity{}, err
+	}
+	return f()
 }

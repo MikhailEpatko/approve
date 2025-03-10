@@ -6,10 +6,10 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type ProcessParallelAnyOf struct {
+type ProcessAnyOfStep struct {
 }
 
-func (s *ProcessParallelAnyOf) Execute(
+func (s *ProcessAnyOfStep) Execute(
 	*sqlx.Tx,
 	resm.ApprovingInfoEntity,
 	bool,

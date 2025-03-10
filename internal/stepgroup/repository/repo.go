@@ -1,6 +1,7 @@
 package repository
 
 import (
+	cm "approve/internal/common"
 	gm "approve/internal/stepgroup/model"
 	"github.com/jmoiron/sqlx"
 )
@@ -25,10 +26,7 @@ func NewStepGroupRepository(db *sqlx.DB) StepGroupRepository {
 func (r *stepGroupRepo) FindByRouteId(id int64) ([]gm.StepGroupEntity, error) {
 	var groups []gm.StepGroupEntity
 	err := r.db.Select(&groups, "select * from step_group where route_id = $1", id)
-	if err != nil {
-		return nil, err
-	}
-	return groups, nil
+	return groups, err
 }
 
 func (r *stepGroupRepo) Save(stepGroup gm.StepGroupEntity) (int64, error) {
@@ -37,10 +35,7 @@ func (r *stepGroupRepo) Save(stepGroup gm.StepGroupEntity) (int64, error) {
      values (:route_id, :name, :number, :status, :step_order)`,
 		&stepGroup,
 	)
-	if err != nil {
-		return 0, err
-	}
-	return res.LastInsertId()
+	return cm.SafeExecuteInt64(err, func() (int64, error) { return res.LastInsertId() })
 }
 
 func (r *stepGroupRepo) StartGroupsTx(

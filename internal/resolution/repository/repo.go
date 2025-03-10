@@ -1,16 +1,17 @@
 package repository
 
 import (
-	. "approve/internal/resolution/model"
+	cm "approve/internal/common"
+	rm "approve/internal/resolution/model"
 	"github.com/jmoiron/sqlx"
 )
 
 type ResolutionRepository interface {
-	FindByApproverId(id int64) ([]ResolutionEntity, error)
-	Save(resolution ResolutionEntity) (int64, error)
-	Update(resolution ResolutionEntity) error
-	SaveTx(tx *sqlx.Tx, resolution ResolutionEntity) (int64, error)
-	ApprovingInfoTx(tx *sqlx.Tx, approverId int64) (ApprovingInfoEntity, error)
+	FindByApproverId(id int64) ([]rm.ResolutionEntity, error)
+	Save(resolution rm.ResolutionEntity) (int64, error)
+	Update(resolution rm.ResolutionEntity) error
+	SaveTx(tx *sqlx.Tx, resolution rm.ResolutionEntity) (int64, error)
+	ApprovingInfoTx(tx *sqlx.Tx, approverId int64) (rm.ApprovingInfoEntity, error)
 }
 
 type resolutionRepo struct {
@@ -21,28 +22,22 @@ func NewResolutionRepository(db *sqlx.DB) ResolutionRepository {
 	return &resolutionRepo{db}
 }
 
-func (r *resolutionRepo) FindByApproverId(id int64) ([]ResolutionEntity, error) {
-	var resolutions []ResolutionEntity
+func (r *resolutionRepo) FindByApproverId(id int64) ([]rm.ResolutionEntity, error) {
+	var resolutions []rm.ResolutionEntity
 	err := r.db.Select(&resolutions, "select * from resolution where approver_id = $1", id)
-	if err != nil {
-		return nil, err
-	}
-	return resolutions, nil
+	return resolutions, err
 }
 
-func (r *resolutionRepo) Save(resolution ResolutionEntity) (int64, error) {
+func (r *resolutionRepo) Save(resolution rm.ResolutionEntity) (int64, error) {
 	res, err := r.db.NamedExec(
 		`insert into resolution (approver_id, is_approved, comment)
      values (:approver_id, :is_approved, :comment)`,
 		&resolution,
 	)
-	if err != nil {
-		return 0, err
-	}
-	return res.LastInsertId()
+	return cm.SafeExecuteInt64(err, func() (int64, error) { return res.LastInsertId() })
 }
 
-func (r *resolutionRepo) Update(resolution ResolutionEntity) error {
+func (r *resolutionRepo) Update(resolution rm.ResolutionEntity) error {
 	_, err := r.db.NamedExec(
 		`update resolution
      set
@@ -51,31 +46,25 @@ func (r *resolutionRepo) Update(resolution ResolutionEntity) error {
      where id = :id`,
 		&resolution,
 	)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func (r *resolutionRepo) SaveTx(
 	tx *sqlx.Tx,
-	resolution ResolutionEntity,
+	resolution rm.ResolutionEntity,
 ) (int64, error) {
 	res, err := tx.NamedExec(
 		`insert into resolution (approver_id, is_approved, comment)
      values (:approver_id, :is_approved, :comment)`,
 		resolution,
 	)
-	if err != nil {
-		return 0, err
-	}
-	return res.LastInsertId()
+	return cm.SafeExecuteInt64(err, func() (int64, error) { return res.LastInsertId() })
 }
 
 func (r *resolutionRepo) ApprovingInfoTx(
 	tx *sqlx.Tx,
 	approverId int64,
-) (res ApprovingInfoEntity, err error) {
+) (res rm.ApprovingInfoEntity, err error) {
 	err = tx.Get(
 		&res,
 		`select 

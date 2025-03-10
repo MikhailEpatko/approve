@@ -1,6 +1,7 @@
 package repository
 
 import (
+	cm "approve/internal/common"
 	rm "approve/internal/route/model"
 	"github.com/jmoiron/sqlx"
 )
@@ -28,10 +29,7 @@ func (r *routeRepo) Save(
 		"insert into route (name, description, status) values (:name, :description, :status)",
 		route,
 	)
-	if err != nil {
-		return 0, err
-	}
-	return res.LastInsertId()
+	return cm.SafeExecuteInt64(err, func() (int64, error) { return res.LastInsertId() })
 }
 
 func (r *routeRepo) StartRouteTx(
@@ -42,8 +40,8 @@ func (r *routeRepo) StartRouteTx(
 	return err
 }
 
-func (r *routeRepo) Update(route rm.RouteEntity) (routId int64, err error) {
-	_, err = r.db.NamedExec(
+func (r *routeRepo) Update(route rm.RouteEntity) (int64, error) {
+	_, err := r.db.NamedExec(
 		`update route 
      set 
        name = :name,
@@ -51,10 +49,7 @@ func (r *routeRepo) Update(route rm.RouteEntity) (routId int64, err error) {
      where id = :id`,
 		route,
 	)
-	if err == nil {
-		routId = route.Id
-	}
-	return routId, err
+	return route.Id, err
 }
 
 func (r *routeRepo) IsRouteStarted(routeId int64) (res bool, err error) {

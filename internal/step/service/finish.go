@@ -2,11 +2,10 @@ package service
 
 import (
 	ar "approve/internal/approver/repository"
-	"approve/internal/common"
+	cm "approve/internal/common"
 	resm "approve/internal/resolution/model"
 	sr "approve/internal/step/repository"
 	gs "approve/internal/stepgroup/service"
-	"fmt"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -22,7 +21,7 @@ func (svc *FinishStepAndStartNext) Execute(
 	isResolutionApproved bool,
 ) (err error) {
 	err = svc.stepRepo.FinishStep(tx, info.StepId)
-	isStepApproved, err := common.SafeExecuteBool(err, func() (bool, error) {
+	isStepApproved, err := cm.SafeExecuteBool(err, func() (bool, error) {
 		return svc.stepRepo.CalculateAndSetIsApproved(
 			tx,
 			info.StepId,
@@ -30,20 +29,17 @@ func (svc *FinishStepAndStartNext) Execute(
 			isResolutionApproved,
 		)
 	})
-	existNotFinishedSteps, err := common.SafeExecuteBool(err, func() (bool, error) {
+	existNotFinishedSteps, err := cm.SafeExecuteBool(err, func() (bool, error) {
 		return svc.stepRepo.ExistsNotFinishedStepsInGroup(tx, info.StepGroupId)
 	})
 	if err == nil && existNotFinishedSteps {
-		if info.StepOrder == common.SERIAL {
+		if info.StepOrder == cm.SERIAL {
 			var nextStepId int64
 			nextStepId, err = svc.stepRepo.StartNextStepTx(tx, info.StepGroupId, info.StepId)
-			err = common.SafeExecute(err, func() error { return svc.approverRepo.StartApproversTx(tx, nextStepId) })
+			err = cm.SafeExecute(err, func() error { return svc.approverRepo.StartStepApprovers(tx, nextStepId) })
 		}
 	} else {
-		err = common.SafeExecute(err, func() error { return svc.finishGroupAndStartNext.Execute(tx, info, isStepApproved) })
+		err = cm.SafeExecute(err, func() error { return svc.finishGroupAndStartNext.Execute(tx, info, isStepApproved) })
 	}
-	if err != nil {
-		return fmt.Errorf("error finish step: %w", err)
-	}
-	return nil
+	return cm.ErrorOrNil("error finish step", err)
 }

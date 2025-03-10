@@ -12,10 +12,6 @@ import (
 	"strings"
 )
 
-const (
-	ERROR_CREATE_RESOLUTION_W = "can't create resolution. Cause: %w"
-)
-
 type CreateResolution struct {
 	transaction    cm.Transaction
 	approverRepo   ar.ApproverRepository
@@ -51,7 +47,7 @@ func (svc *CreateResolution) CreateResolution(
 			err = svc.processAnyOf.Execute(tx, info, request.IsApproved)
 		}
 	}
-	return resolutionId, cm.ErrorOrNil(ERROR_CREATE_RESOLUTION_W, err)
+	return resolutionId, cm.ErrorOrNil("can't create resolution", err)
 }
 
 func (svc *CreateResolution) validateRequest(

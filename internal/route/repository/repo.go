@@ -10,7 +10,7 @@ type RouteRepository interface {
 	StartRouteTx(tx *sqlx.Tx, id int64) error
 	Update(route rm.RouteEntity) (int64, error)
 	IsRouteStarted(routeId int64) (bool, error)
-	FinishRoute(tx *sqlx.Tx, routeId int64, isRouteApproved bool) error
+	FinishRoute(tx *sqlx.Tx, routeId int64) error
 }
 
 type routeRepo struct {
@@ -45,7 +45,8 @@ func (r *routeRepo) StartRouteTx(
 func (r *routeRepo) Update(route rm.RouteEntity) (routId int64, err error) {
 	_, err = r.db.NamedExec(
 		`update route 
-     set name = :name,
+     set 
+       name = :name,
        description = :description
      where id = :id`,
 		route,
@@ -68,16 +69,14 @@ func (r *routeRepo) IsRouteStarted(routeId int64) (res bool, err error) {
 func (r *routeRepo) FinishRoute(
 	tx *sqlx.Tx,
 	routeId int64,
-	isRouteApproved bool,
 ) error {
 	_, err := tx.Exec(
 		`update route 
      set 
        status = 'FINISHED',
-       is_approved = $2
+       is_approved = (select not exists(select 1 from step_group where route_id = $1 and is_approved = false))
      where id = $1`,
 		routeId,
-		isRouteApproved,
 	)
 	return err
 }

@@ -22,32 +22,28 @@ func (svc *FinishStepAndStartNext) Execute(
 	isResolutionApproved bool,
 ) (err error) {
 	err = svc.stepRepo.FinishStep(tx, info.StepId)
-	if err != nil {
-		return fmt.Errorf("can't finish step: %w", err)
-	}
-	isStepApproved, err := svc.stepRepo.CalculateAndSetIsApproved(
-		tx,
-		info.StepId,
-		info.ApproverOrder,
-		isResolutionApproved,
-	)
-	if err != nil {
-		return fmt.Errorf("can't calculate and set step.is_approved: %w", err)
-	}
-	existNotFinishedSteps, err := svc.stepRepo.ExistsNotFinishedStepsInGroup(tx, info.StepGroupId)
-	if err != nil {
-		return fmt.Errorf("can't check if not finished steps in group exists: %w", err)
-	}
-	if existNotFinishedSteps {
+	isStepApproved, err := common.SafeExecuteBool(err, func() (bool, error) {
+		return svc.stepRepo.CalculateAndSetIsApproved(
+			tx,
+			info.StepId,
+			info.ApproverOrder,
+			isResolutionApproved,
+		)
+	})
+	existNotFinishedSteps, err := common.SafeExecuteBool(err, func() (bool, error) {
+		return svc.stepRepo.ExistsNotFinishedStepsInGroup(tx, info.StepGroupId)
+	})
+	if err == nil && existNotFinishedSteps {
 		if info.StepOrder == common.SERIAL {
-			nextStepId, err := svc.stepRepo.StartNextStepTx(tx, info.StepGroupId, info.StepId)
-			if err != nil {
-				return fmt.Errorf("can't start next step: %w", err)
-			}
-			err = svc.approverRepo.StartApproversTx(tx, nextStepId)
+			var nextStepId int64
+			nextStepId, err = svc.stepRepo.StartNextStepTx(tx, info.StepGroupId, info.StepId)
+			err = common.SafeExecute(err, func() error { return svc.approverRepo.StartApproversTx(tx, nextStepId) })
 		}
 	} else {
-		err = svc.finishGroupAndStartNext.Execute(tx, info, isStepApproved)
+		err = common.SafeExecute(err, func() error { return svc.finishGroupAndStartNext.Execute(tx, info, isStepApproved) })
 	}
-	return err
+	if err != nil {
+		return fmt.Errorf("error finish step: %w", err)
+	}
+	return nil
 }

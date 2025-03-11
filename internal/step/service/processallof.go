@@ -31,5 +31,5 @@ func (svc *ProcessAllOffStep) Execute(
 	} else {
 		err = svc.finishStep.Execute(tx, info, isResolutionApproved)
 	}
-	return cm.ErrorOrNil("process serial step error", err)
+	return cm.ErrorOrNil("process serial or parallel_all_off step error", err)
 }

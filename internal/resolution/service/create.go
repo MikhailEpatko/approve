@@ -8,8 +8,9 @@ import (
 	ss "approve/internal/step/service"
 	"errors"
 	"fmt"
-	"github.com/jmoiron/sqlx"
 	"strings"
+
+	"github.com/jmoiron/sqlx"
 )
 
 type CreateResolution struct {
@@ -19,6 +20,14 @@ type CreateResolution struct {
 	processAnyOf   ss.ProcessAnyOfStep
 	processAllOf   ss.ProcessAllOffStep
 }
+
+var (
+	ErrInvalidApproverOrder    = errors.New("invalid approver order")
+	ErrCommentShouldBeProvided = errors.New("comment should be provided")
+	ErrApproverNotFound        = errors.New("approver was not found")
+	ErrApproverIsNotStarted    = errors.New("approver is not started")
+	ErrStepIsNotStarted        = errors.New("step is not started")
+)
 
 func (svc *CreateResolution) CreateResolution(
 	request resm.CreateResolutionRequest,
@@ -45,6 +54,8 @@ func (svc *CreateResolution) CreateResolution(
 			err = svc.processAllOf.Execute(tx, info, request.IsApproved)
 		case cm.PARALLEL_ANY_OF:
 			err = svc.processAnyOf.Execute(tx, info, request.IsApproved)
+		default:
+			err = ErrInvalidApproverOrder
 		}
 	}
 	return resolutionId, cm.ErrorOrNil("can't create resolution", err)
@@ -56,18 +67,18 @@ func (svc *CreateResolution) validateRequest(
 ) (info resm.ApprovingInfoEntity, err error) {
 	// TODO: check if requester is approver (has approver's guid in jwt token)
 	if !request.IsApproved && strings.TrimSpace(request.Comment) == "" {
-		return info, errors.New("comment should be provided")
+		return info, ErrCommentShouldBeProvided
 	}
 	info, err = svc.resolutionRepo.ApprovingInfoTx(tx, request.ApproverId)
 	switch {
 	case err != nil:
 		break
 	case info.Guid == "":
-		err = errors.New("approver was not found")
+		err = ErrApproverNotFound
 	case info.ApproverStatus != cm.STARTED:
-		err = errors.New("approver is not started")
+		err = ErrApproverIsNotStarted
 	case info.StepStatus != cm.STARTED:
-		err = errors.New("step is not started")
+		err = ErrStepIsNotStarted
 	}
 	return info, err
 }

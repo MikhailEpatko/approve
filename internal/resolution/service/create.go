@@ -41,10 +41,10 @@ func (svc *CreateResolution) CreateResolution(
 			err = tx.Commit()
 		}
 	}()
-	info, err := SafeExecuteInfo(err, func() (resm.ApprovingInfoEntity, error) {
+	info, err := cm.SafeExecuteG(err, func() (resm.ApprovingInfoEntity, error) {
 		return svc.validateRequest(tx, request)
 	})
-	resolutionId, err = cm.SafeExecuteInt64(err, func() (int64, error) {
+	resolutionId, err = cm.SafeExecuteG(err, func() (int64, error) {
 		return svc.resolutionRepo.SaveTx(tx, request.ToEntity())
 	})
 	err = cm.SafeExecute(err, func() error { return svc.approverRepo.FinishApprover(tx, request.ApproverId) })
@@ -81,11 +81,4 @@ func (svc *CreateResolution) validateRequest(
 		err = ErrStepIsNotStarted
 	}
 	return info, err
-}
-
-func SafeExecuteInfo(err error, f func() (resm.ApprovingInfoEntity, error)) (resm.ApprovingInfoEntity, error) {
-	if err != nil {
-		return resm.ApprovingInfoEntity{}, err
-	}
-	return f()
 }

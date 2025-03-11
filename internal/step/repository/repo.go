@@ -46,7 +46,7 @@ func (r *stepRepo) Save(step sm.StepEntity) (int64, error) {
      values (:step_group_id, :name, :number, :status, :approver_order)`,
 		&step,
 	)
-	return common.SafeExecuteInt64(err, func() (int64, error) { return res.LastInsertId() })
+	return common.SafeExecuteG(err, func() (int64, error) { return res.LastInsertId() })
 }
 
 func (r *stepRepo) StartStepsTx(

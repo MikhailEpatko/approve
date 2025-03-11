@@ -3,6 +3,7 @@ package repository
 import (
 	cm "approve/internal/common"
 	rm "approve/internal/resolution/model"
+
 	"github.com/jmoiron/sqlx"
 )
 
@@ -34,7 +35,7 @@ func (r *resolutionRepo) Save(resolution rm.ResolutionEntity) (int64, error) {
      values (:approver_id, :is_approved, :comment)`,
 		&resolution,
 	)
-	return cm.SafeExecuteInt64(err, func() (int64, error) { return res.LastInsertId() })
+	return cm.SafeExecuteG(err, func() (int64, error) { return res.LastInsertId() })
 }
 
 func (r *resolutionRepo) Update(resolution rm.ResolutionEntity) error {
@@ -58,7 +59,7 @@ func (r *resolutionRepo) SaveTx(
      values (:approver_id, :is_approved, :comment)`,
 		resolution,
 	)
-	return cm.SafeExecuteInt64(err, func() (int64, error) { return res.LastInsertId() })
+	return cm.SafeExecuteG(err, func() (int64, error) { return res.LastInsertId() })
 }
 
 func (r *resolutionRepo) ApprovingInfoTx(

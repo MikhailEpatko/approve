@@ -3,6 +3,7 @@ package repository
 import (
 	am "approve/internal/approver/model"
 	"approve/internal/common"
+
 	"github.com/jmoiron/sqlx"
 )
 
@@ -37,7 +38,7 @@ func (r *approverRepo) Save(approver am.ApproverEntity) (int64, error) {
      values (:step_id, :guid, :name, :position, :email, :number)`,
 		&approver,
 	)
-	return common.SafeExecuteInt64(err, func() (int64, error) { return res.LastInsertId() })
+	return common.SafeExecuteG(err, func() (int64, error) { return res.LastInsertId() })
 }
 
 func (r *approverRepo) StartStepApprovers(

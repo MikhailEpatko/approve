@@ -3,6 +3,7 @@ package repository
 import (
 	cm "approve/internal/common"
 	gm "approve/internal/stepgroup/model"
+
 	"github.com/jmoiron/sqlx"
 )
 
@@ -35,7 +36,7 @@ func (r *stepGroupRepo) Save(stepGroup gm.StepGroupEntity) (int64, error) {
      values (:route_id, :name, :number, :status, :step_order)`,
 		&stepGroup,
 	)
-	return cm.SafeExecuteInt64(err, func() (int64, error) { return res.LastInsertId() })
+	return cm.SafeExecuteG(err, func() (int64, error) { return res.LastInsertId() })
 }
 
 func (r *stepGroupRepo) StartGroupsTx(

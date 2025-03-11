@@ -3,6 +3,7 @@ package repository
 import (
 	cm "approve/internal/common"
 	rm "approve/internal/route/model"
+
 	"github.com/jmoiron/sqlx"
 )
 
@@ -29,7 +30,7 @@ func (r *routeRepo) Save(
 		"insert into route (name, description, status) values (:name, :description, :status)",
 		route,
 	)
-	return cm.SafeExecuteInt64(err, func() (int64, error) { return res.LastInsertId() })
+	return cm.SafeExecuteG(err, func() (int64, error) { return res.LastInsertId() })
 }
 
 func (r *routeRepo) StartRouteTx(

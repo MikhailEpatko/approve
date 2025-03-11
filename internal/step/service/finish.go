@@ -21,7 +21,7 @@ func (svc *FinishStepAndStartNext) Execute(
 	isResolutionApproved bool,
 ) (err error) {
 	err = svc.stepRepo.FinishStep(tx, info.StepId)
-	isStepApproved, err := cm.SafeExecuteBool(err, func() (bool, error) {
+	isStepApproved, err := cm.SafeExecuteG(err, func() (bool, error) {
 		return svc.stepRepo.CalculateAndSetIsApproved(
 			tx,
 			info.StepId,
@@ -29,7 +29,7 @@ func (svc *FinishStepAndStartNext) Execute(
 			isResolutionApproved,
 		)
 	})
-	existNotFinishedSteps, err := cm.SafeExecuteBool(err, func() (bool, error) {
+	existNotFinishedSteps, err := cm.SafeExecuteG(err, func() (bool, error) {
 		return svc.stepRepo.ExistsNotFinishedStepsInGroup(tx, info.StepGroupId)
 	})
 	if err == nil && existNotFinishedSteps {

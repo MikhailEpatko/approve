@@ -16,5 +16,5 @@ func (svc *UpdateStepGroup) Execute(request gm.UpdateStepGroupRequest) (groupId 
 	if err == nil && isRouteStarted {
 		err = fmt.Errorf("route was started and cannot be updated")
 	}
-	return cm.SafeExecuteInt64(err, func() (int64, error) { return svc.repo.Update(request.ToEntity()) })
+	return cm.SafeExecuteG(err, func() (int64, error) { return svc.repo.Update(request.ToEntity()) })
 }

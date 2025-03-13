@@ -10,7 +10,7 @@ import (
 type StepGroupRepository interface {
 	FindByRouteId(id int64) ([]gm.StepGroupEntity, error)
 	Save(stepGroup gm.StepGroupEntity) (int64, error)
-	StartGroupsTx(tx *sqlx.Tx, routeId int64) (gm.StepGroupEntity, error)
+	StartGroups(tx *sqlx.Tx, routeId int64) (gm.StepGroupEntity, error)
 	Update(group gm.StepGroupEntity) (int64, error)
 	IsRouteStarted(stepGroupId int64) (bool, error)
 	FinishGroupsByRouteId(tx *sqlx.Tx, routeId int64) error
@@ -39,7 +39,7 @@ func (r *stepGroupRepo) Save(stepGroup gm.StepGroupEntity) (int64, error) {
 	return cm.SafeExecuteG(err, func() (int64, error) { return res.LastInsertId() })
 }
 
-func (r *stepGroupRepo) StartGroupsTx(
+func (r *stepGroupRepo) StartGroups(
 	tx *sqlx.Tx,
 	routeId int64,
 ) (group gm.StepGroupEntity, err error) {

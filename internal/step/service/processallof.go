@@ -21,15 +21,13 @@ func (svc *ProcessAllOffStep) Execute(
 		err = svc.approverRepo.FinishStepApprovers(tx, info.StepId)
 		return cm.SafeExecute(err, func() error { return svc.finishStep.Execute(tx, info, isResolutionApproved) })
 	}
-	existNotFinishedApprovers, err := cm.SafeExecuteBool(nil, func() (bool, error) {
-		return svc.approverRepo.ExistNotFinishedApproversInStep(tx, info.StepId)
-	})
+	existNotFinishedApprovers, err := svc.approverRepo.ExistNotFinishedApproversInStep(tx, info.StepId)
 	if err == nil && existNotFinishedApprovers {
 		if info.ApproverOrder == cm.SERIAL {
 			err = svc.approverRepo.StartNextApprover(tx, info.StepId, info.ApproverId)
 		}
 	} else {
-		err = svc.finishStep.Execute(tx, info, isResolutionApproved)
+		err = cm.SafeExecute(err, func() error { return svc.finishStep.Execute(tx, info, isResolutionApproved) })
 	}
 	return cm.ErrorOrNil("process serial or parallel_all_off step error", err)
 }

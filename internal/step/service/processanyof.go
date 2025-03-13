@@ -21,9 +21,7 @@ func (svc *ProcessAnyOfStep) Execute(
 		err = svc.approverRepo.FinishStepApprovers(tx, info.StepId)
 		return cm.SafeExecute(err, func() error { return svc.finishStep.Execute(tx, info, isResolutionApproved) })
 	}
-	existNotFinishedApprovers, err := cm.SafeExecuteBool(nil, func() (bool, error) {
-		return svc.approverRepo.ExistNotFinishedApproversInStep(tx, info.StepId)
-	})
+	existNotFinishedApprovers, err := svc.approverRepo.ExistNotFinishedApproversInStep(tx, info.StepId)
 	if err != nil || !existNotFinishedApprovers {
 		err = svc.finishStep.Execute(tx, info, isResolutionApproved)
 	}

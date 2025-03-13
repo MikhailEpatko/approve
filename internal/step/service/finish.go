@@ -35,7 +35,7 @@ func (svc *FinishStepAndStartNext) Execute(
 	if err == nil && existNotFinishedSteps {
 		if info.StepOrder == cm.SERIAL {
 			var nextStepId int64
-			nextStepId, err = svc.stepRepo.StartNextStepTx(tx, info.StepGroupId, info.StepId)
+			nextStepId, err = svc.stepRepo.StartNextStep(tx, info.StepGroupId, info.StepId)
 			err = cm.SafeExecute(err, func() error { return svc.approverRepo.StartStepApprovers(tx, nextStepId) })
 		}
 	} else {

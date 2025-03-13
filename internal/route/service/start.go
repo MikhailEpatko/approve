@@ -39,7 +39,7 @@ func (svc *StartRoute) startRote(
 	tx *sqlx.Tx,
 	routeId int64,
 ) error {
-	err := svc.routeRepo.StartRouteTx(tx, routeId)
+	err := svc.routeRepo.StartRoute(tx, routeId)
 	return cm.SafeExecute(err, func() error { return svc.stargGroups(tx, routeId) })
 }
 
@@ -47,7 +47,7 @@ func (svc *StartRoute) stargGroups(
 	tx *sqlx.Tx,
 	routeId int64,
 ) error {
-	group, err := svc.stepGroupRepo.StartGroupsTx(tx, routeId)
+	group, err := svc.stepGroupRepo.StartGroups(tx, routeId)
 	if err == nil && group.Id > 0 {
 		err = svc.startSteps(tx, group)
 	}
@@ -58,7 +58,7 @@ func (svc *StartRoute) startSteps(
 	tx *sqlx.Tx,
 	group gm.StepGroupEntity,
 ) error {
-	steps, err := svc.stepRepo.StartStepsTx(tx, group)
+	steps, err := svc.stepRepo.StartSteps(tx, group)
 	if err == nil && len(steps) > 0 {
 		for _, step := range steps {
 			err = svc.startApprovers(tx, step)

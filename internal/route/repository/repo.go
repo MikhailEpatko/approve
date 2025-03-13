@@ -9,7 +9,7 @@ import (
 
 type RouteRepository interface {
 	Save(entity rm.RouteEntity) (int64, error)
-	StartRouteTx(tx *sqlx.Tx, id int64) error
+	StartRoute(tx *sqlx.Tx, id int64) error
 	Update(route rm.RouteEntity) (int64, error)
 	IsRouteStarted(routeId int64) (bool, error)
 	FinishRoute(tx *sqlx.Tx, routeId int64) error
@@ -33,7 +33,7 @@ func (r *routeRepo) Save(
 	return cm.SafeExecuteG(err, func() (int64, error) { return res.LastInsertId() })
 }
 
-func (r *routeRepo) StartRouteTx(
+func (r *routeRepo) StartRoute(
 	tx *sqlx.Tx,
 	routeId int64,
 ) error {

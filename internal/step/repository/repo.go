@@ -11,7 +11,7 @@ import (
 type StepRepository interface {
 	FindByGroupId(id int64) ([]sm.StepEntity, error)
 	Save(step sm.StepEntity) (int64, error)
-	StartStepsTx(tx *sqlx.Tx, group gm.StepGroupEntity) ([]sm.StepEntity, error)
+	StartSteps(tx *sqlx.Tx, group gm.StepGroupEntity) ([]sm.StepEntity, error)
 	Update(step sm.StepEntity) (int64, error)
 	IsRouteStarted(stepId int64) (bool, error)
 	FinishStepsByRouteId(tx *sqlx.Tx, routeId int64) error
@@ -23,7 +23,7 @@ type StepRepository interface {
 		isResolutionApproved bool,
 	) (res bool, err error)
 	ExistsNotFinishedStepsInGroup(x *sqlx.Tx, stepGroupId int64) (bool, error)
-	StartNextStepTx(tx *sqlx.Tx, stepGroupId int64, stepId int64) (int64, error)
+	StartNextStep(tx *sqlx.Tx, stepGroupId int64, stepId int64) (int64, error)
 }
 
 type stepRepo struct {
@@ -49,7 +49,7 @@ func (r *stepRepo) Save(step sm.StepEntity) (int64, error) {
 	return common.SafeExecuteG(err, func() (int64, error) { return res.LastInsertId() })
 }
 
-func (r *stepRepo) StartStepsTx(
+func (r *stepRepo) StartSteps(
 	tx *sqlx.Tx,
 	group gm.StepGroupEntity,
 ) ([]sm.StepEntity, error) {
@@ -175,7 +175,7 @@ func (r *stepRepo) ExistsNotFinishedStepsInGroup(
 	return res, err
 }
 
-func (r *stepRepo) StartNextStepTx(
+func (r *stepRepo) StartNextStep(
 	tx *sqlx.Tx,
 	stepGroupId int64,
 	stepId int64,

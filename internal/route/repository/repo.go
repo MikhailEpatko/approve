@@ -12,7 +12,7 @@ type RouteRepository interface {
 	StartRoute(tx *sqlx.Tx, id int64) error
 	Update(route rm.RouteEntity) (int64, error)
 	IsRouteStarted(routeId int64) (bool, error)
-	FinishRoute(tx *sqlx.Tx, routeId int64) error
+	FinishRoute(tx *sqlx.Tx, routeId int64, isGroupApproved bool) error
 }
 
 type routeRepo struct {
@@ -65,14 +65,16 @@ func (r *routeRepo) IsRouteStarted(routeId int64) (res bool, err error) {
 func (r *routeRepo) FinishRoute(
 	tx *sqlx.Tx,
 	routeId int64,
+	isGroupApproved bool,
 ) error {
 	_, err := tx.Exec(
 		`update route 
      set 
        status = 'FINISHED',
-       is_approved = (select not exists(select 1 from step_group where route_id = $1 and is_approved = false))
+       is_approved = $2
      where id = $1`,
 		routeId,
+		isGroupApproved,
 	)
 	return err
 }

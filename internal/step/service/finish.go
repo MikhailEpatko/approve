@@ -12,7 +12,7 @@ import (
 type FinishStepAndStartNext struct {
 	stepRepo                sr.StepRepository
 	approverRepo            ar.ApproverRepository
-	finishGroupAndStartNext gs.FinishGroupAndStartNext
+	finishGroupAndStartNext gs.FinishStepGroupAndStartNext
 }
 
 func (svc *FinishStepAndStartNext) Execute(

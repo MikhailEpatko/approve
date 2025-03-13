@@ -14,6 +14,15 @@ type StepGroupRepository interface {
 	Update(group gm.StepGroupEntity) (int64, error)
 	IsRouteStarted(stepGroupId int64) (bool, error)
 	FinishGroupsByRouteId(tx *sqlx.Tx, routeId int64) error
+	FinishGroup(tx *sqlx.Tx, stepGroupId int64) error
+	CalculateAndSetIsApproved(
+		tx *sqlx.Tx,
+		stepGroupId int64,
+		stepOrder cm.OrderType,
+		isStepApproved bool,
+	) (bool, error)
+	ExistsNotFinishedStepGroupsInRoute(tx *sqlx.Tx, routeId int64) (bool, error)
+	StartNextGroup(tx *sqlx.Tx, routeId int64, stepGroupId int64) (int64, error)
 }
 
 type stepGroupRepo struct {
@@ -94,4 +103,71 @@ func (r *stepGroupRepo) FinishGroupsByRouteId(
 		routeId,
 	)
 	return err
+}
+
+func (r *stepGroupRepo) FinishGroup(
+	tx *sqlx.Tx,
+	stepGroupId int64,
+) error {
+	_, err := tx.Exec("update step_group set status = 'FINISHED' where id = $1", stepGroupId)
+	return err
+}
+
+func (r *stepGroupRepo) CalculateAndSetIsApproved(
+	tx *sqlx.Tx,
+	stepGroupId int64,
+	stepOrder cm.OrderType,
+	isStepApproved bool,
+) (res bool, err error) {
+	err = tx.Get(
+		&res,
+		`update step_group
+		 set is_approved = (
+	     case
+			   when $1 = 'PARALLEL_ANY_OF' and not $2 then exists (
+					 select 1 
+					 from step s
+					 inner join step_group g on g.id = s.step_group_id
+					 where g.id = $3 and s.is_approved = true
+				 )
+			   else $2
+			 end
+		 )
+		 where id = $3
+		 returning is_approved`,
+		stepOrder,
+		isStepApproved,
+		stepGroupId,
+	)
+	return res, err
+}
+
+func (r *stepGroupRepo) ExistsNotFinishedStepGroupsInRoute(
+	tx *sqlx.Tx,
+	routeId int64,
+) (res bool, err error) {
+	err = tx.Select(
+		&res,
+		"select exists (select 1 from step_group where route_id = $1 and status != 'FINISHED')",
+		routeId,
+	)
+	return res, err
+}
+
+func (r *stepGroupRepo) StartNextGroup(
+	tx *sqlx.Tx,
+	routeId int64,
+	stepGroupId int64,
+) (nextGroupId int64, err error) {
+	err = tx.Get(
+		&nextGroupId,
+		`update step_group 
+     set status = 'STARTED'
+     where route_id = $1
+     and number = (select number + 1 from step_group where id = $2)
+     returning id`,
+		routeId,
+		stepGroupId,
+	)
+	return nextGroupId, err
 }

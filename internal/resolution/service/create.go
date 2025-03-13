@@ -3,6 +3,7 @@ package service
 import (
 	ar "approve/internal/approver/repository"
 	cm "approve/internal/common"
+	cfg "approve/internal/config"
 	resm "approve/internal/resolution/model"
 	resr "approve/internal/resolution/repository"
 	ss "approve/internal/step/service"
@@ -14,7 +15,7 @@ import (
 )
 
 type CreateResolution struct {
-	transaction    cm.Transaction
+	transaction    cfg.Transaction
 	approverRepo   ar.ApproverRepository
 	resolutionRepo resr.ResolutionRepository
 	processAnyOf   ss.ProcessAnyOfStep

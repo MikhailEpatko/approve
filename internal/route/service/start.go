@@ -3,6 +3,7 @@ package service
 import (
 	ar "approve/internal/approver/repository"
 	cm "approve/internal/common"
+	cfg "approve/internal/config"
 	resr "approve/internal/resolution/repository"
 	rr "approve/internal/route/repository"
 	sm "approve/internal/step/model"
@@ -14,7 +15,7 @@ import (
 )
 
 type StartRoute struct {
-	transaction    cm.Transaction
+	transaction    cfg.Transaction
 	routeRepo      rr.RouteRepository
 	stepGroupRepo  gr.StepGroupRepository
 	stepRepo       sr.StepRepository

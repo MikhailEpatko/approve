@@ -1,7 +1,6 @@
 package repository
 
 import (
-	cm "approve/internal/common"
 	rm "approve/internal/route/model"
 
 	"github.com/jmoiron/sqlx"
@@ -13,6 +12,7 @@ type RouteRepository interface {
 	Update(route rm.RouteEntity) (int64, error)
 	IsRouteStarted(routeId int64) (bool, error)
 	FinishRoute(tx *sqlx.Tx, routeId int64, isGroupApproved bool) error
+	GetById(id int64) (rm.RouteEntity, error)
 }
 
 type routeRepo struct {
@@ -25,12 +25,15 @@ func NewRouteRepository(db *sqlx.DB) RouteRepository {
 
 func (r *routeRepo) Save(
 	route rm.RouteEntity,
-) (int64, error) {
-	res, err := r.db.NamedExec(
-		"insert into route (name, description, status) values (:name, :description, :status)",
-		route,
+) (res int64, err error) {
+	err = r.db.Get(
+		&res,
+		"insert into route (name, description, status) values ($1, $2, $3) returning id",
+		route.Name,
+		route.Description,
+		route.Status,
 	)
-	return cm.SafeExecuteG(err, func() (int64, error) { return res.LastInsertId() })
+	return res, err
 }
 
 func (r *routeRepo) StartRoute(
@@ -77,4 +80,9 @@ func (r *routeRepo) FinishRoute(
 		isGroupApproved,
 	)
 	return err
+}
+
+func (r *routeRepo) GetById(id int64) (res rm.RouteEntity, err error) {
+	err = r.db.Get(&res, "select * from route where id = $1", id)
+	return res, err
 }

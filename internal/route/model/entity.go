@@ -7,6 +7,7 @@ type RouteEntity struct {
 	Name        string        `db:"name"`
 	Description string        `db:"description"`
 	Status      common.Status `db:"status"`
+	IsApproved  bool          `db:"is_approved"`
 	Deleted     bool          `db:"deleted"`
 }
 

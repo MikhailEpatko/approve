@@ -134,24 +134,15 @@ func (r *stepRepo) CalculateAndSetIsApproved(
 		`update step
 			set is_approved = (
 				case
-					when $1 = 'PARALLEL_ANY_OF' and $2 then true
 					when $1 = 'PARALLEL_ANY_OF' and not $2 then exists (
-						select 1
-							from resolution r
-							inner join approver a on r.approver_id = a.id
-							inner join step s on a.step_id = s.id
-							where s.id = $3
-							and r.is_approved = true
-					)
-					when $1 <> 'PARALLEL_ANY_OF' and not $2 then false
-					else not exists (
 						select 1
 						from resolution r
 						inner join approver a on r.approver_id = a.id
 						inner join step s on a.step_id = s.id
 						where s.id = $3
-						and r.is_approved = false
+						and r.is_approved = true
 					)
+				  else $2
 				end
 			)
 			where id = $3
@@ -169,7 +160,7 @@ func (r *stepRepo) ExistsNotFinishedStepsInGroup(
 ) (res bool, err error) {
 	err = tx.Select(
 		&res,
-		"select exists (select 1 from step where step.step_group_id = $1 and status != 'FINISHED')",
+		"select exists (select 1 from step where step_group_id = $1 and status != 'FINISHED')",
 		stepGroupId,
 	)
 	return res, err

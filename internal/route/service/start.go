@@ -4,7 +4,6 @@ import (
 	ar "approve/internal/approver/repository"
 	cm "approve/internal/common"
 	cfg "approve/internal/config"
-	resr "approve/internal/resolution/repository"
 	rr "approve/internal/route/repository"
 	sm "approve/internal/step/model"
 	sr "approve/internal/step/repository"
@@ -15,12 +14,11 @@ import (
 )
 
 type StartRoute struct {
-	transaction    cfg.Transaction
-	routeRepo      rr.RouteRepository
-	stepGroupRepo  gr.StepGroupRepository
-	stepRepo       sr.StepRepository
-	approverRepo   ar.ApproverRepository
-	resolutionRepo resr.ResolutionRepository
+	transaction   cfg.Transaction
+	routeRepo     rr.RouteRepository
+	stepGroupRepo gr.StepGroupRepository
+	stepRepo      sr.StepRepository
+	approverRepo  ar.ApproverRepository
 }
 
 func (svc *StartRoute) Execute(routeId int64) (err error) {

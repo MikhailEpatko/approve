@@ -43,6 +43,6 @@ go install github.com/pressly/goose/v3/cmd/goose@latest
 goose up
 ```
 
-### Make resolution schema
+### Resolution schema
 
-![Make resolution schema](https://github.com/MikhailEpatko/approve/blob/main/docs/make-decision-sequence.drawio.svg)
+![Resolution schema](https://github.com/MikhailEpatko/approve/blob/main/docs/make-decision-sequence.drawio.svg)

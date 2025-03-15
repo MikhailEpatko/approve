@@ -39,13 +39,19 @@ func (r *stepGroupRepo) FindByRouteId(id int64) ([]gm.StepGroupEntity, error) {
 	return groups, err
 }
 
-func (r *stepGroupRepo) Save(stepGroup gm.StepGroupEntity) (int64, error) {
-	res, err := r.db.NamedExec(
+func (r *stepGroupRepo) Save(stepGroup gm.StepGroupEntity) (id int64, err error) {
+	err = r.db.Get(
+		&id,
 		`insert into step_group (route_id, name, number, status, step_order)
-     values (:route_id, :name, :number, :status, :step_order)`,
-		&stepGroup,
+     values ($1, $2, $3, $4, $5)
+     returning id`,
+		stepGroup.RouteId,
+		stepGroup.Name,
+		stepGroup.Number,
+		stepGroup.Status,
+		stepGroup.StepOrder,
 	)
-	return cm.SafeExecuteG(err, func() (int64, error) { return res.LastInsertId() })
+	return id, err
 }
 
 func (r *stepGroupRepo) StartGroups(

@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 )
 
 func NewDB(cfg *AppConfig) (*sqlx.DB, error) {

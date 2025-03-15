@@ -7,7 +7,6 @@ type ResolutionEntity struct {
 	ApproverId int64  `db:"approver_id"`
 	IsApproved bool   `db:"is_approved"`
 	Comment    string `db:"comment"`
-	Deleted    bool   `db:"deleted"`
 }
 
 type ApprovingInfoEntity struct {

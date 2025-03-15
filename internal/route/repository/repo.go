@@ -13,6 +13,7 @@ type RouteRepository interface {
 	IsRouteStarted(routeId int64) (bool, error)
 	FinishRoute(tx *sqlx.Tx, routeId int64, isGroupApproved bool) error
 	GetById(id int64) (rm.RouteEntity, error)
+	DeleteById(routeId int64) error
 }
 
 type routeRepo struct {
@@ -59,7 +60,10 @@ func (r *routeRepo) Update(route rm.RouteEntity) (int64, error) {
 func (r *routeRepo) IsRouteStarted(routeId int64) (res bool, err error) {
 	err = r.db.Get(
 		&res,
-		`select exists (select 1 from route where id = $1 and status in ('STARTED', 'FINISHED'))`,
+		`select exists (select 1 
+                    from route
+                    where id = $1 
+                    and status in ('STARTED', 'FINISHED'))`,
 		routeId,
 	)
 	return res, err
@@ -85,4 +89,9 @@ func (r *routeRepo) FinishRoute(
 func (r *routeRepo) GetById(id int64) (res rm.RouteEntity, err error) {
 	err = r.db.Get(&res, "select * from route where id = $1", id)
 	return res, err
+}
+
+func (r *routeRepo) DeleteById(routeId int64) error {
+	_, err := r.db.Exec("delete from route where id = $1", routeId)
+	return err
 }

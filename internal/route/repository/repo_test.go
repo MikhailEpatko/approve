@@ -54,7 +54,6 @@ func TestRouteRepository(t *testing.T) {
 		a.Equal(want.Name, got.Name)
 		a.Equal(want.Description, got.Description)
 		a.Equal(want.Status, got.Status)
-		a.Equal(want.Deleted, got.Deleted)
 		a.Equal(want.IsApproved, got.IsApproved)
 		teardown(cleaner)
 	})
@@ -73,7 +72,6 @@ func TestRouteRepository(t *testing.T) {
 		a.Equal(want.Description, got.Description)
 		a.Equal(want.IsApproved, got.IsApproved)
 		a.Equal(cm.STARTED, got.Status)
-		a.False(got.Deleted)
 		teardown(cleaner)
 	})
 
@@ -84,7 +82,6 @@ func TestRouteRepository(t *testing.T) {
 			Name:        "new test name",
 			Description: "new test description",
 			Status:      cm.FINISHED,
-			Deleted:     true,
 			IsApproved:  true,
 		}
 
@@ -97,7 +94,6 @@ func TestRouteRepository(t *testing.T) {
 		a.Equal(toUpdate.Name, got.Name)
 		a.Equal(toUpdate.Description, got.Description)
 		a.Equal(want.Status, got.Status)
-		a.Equal(want.Deleted, got.Deleted)
 		a.Equal(want.IsApproved, got.IsApproved)
 		teardown(cleaner)
 	})
@@ -144,7 +140,6 @@ func TestRouteRepository(t *testing.T) {
 		a.Equal(want.Name, got.Name)
 		a.Equal(want.Description, got.Description)
 		a.Equal(cm.FINISHED, got.Status)
-		a.False(got.Deleted)
 		a.True(got.IsApproved)
 		teardown(cleaner)
 	})
@@ -168,7 +163,6 @@ func TestRouteRepository(t *testing.T) {
 		a.Equal(want.Name, got.Name)
 		a.Equal(want.Description, got.Description)
 		a.Equal(cm.FINISHED, got.Status)
-		a.False(got.Deleted)
 		a.False(got.IsApproved)
 		teardown(cleaner)
 	})

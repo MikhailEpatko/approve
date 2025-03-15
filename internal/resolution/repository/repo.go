@@ -29,13 +29,16 @@ func (r *resolutionRepo) FindByApproverId(id int64) ([]rm.ResolutionEntity, erro
 	return resolutions, err
 }
 
-func (r *resolutionRepo) Save(resolution rm.ResolutionEntity) (int64, error) {
-	res, err := r.db.NamedExec(
+func (r *resolutionRepo) Save(resolution rm.ResolutionEntity) (id int64, err error) {
+	err = r.db.Get(
+		&id,
 		`insert into resolution (approver_id, is_approved, comment)
-     values (:approver_id, :is_approved, :comment)`,
-		&resolution,
+     values ($1, $2, $3) returning id`,
+		resolution.ApproverId,
+		resolution.IsApproved,
+		resolution.Comment,
 	)
-	return cm.SafeExecuteG(err, func() (int64, error) { return res.LastInsertId() })
+	return id, err
 }
 
 func (r *resolutionRepo) Update(resolution rm.ResolutionEntity) error {

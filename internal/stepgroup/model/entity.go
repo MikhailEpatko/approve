@@ -11,5 +11,4 @@ type StepGroupEntity struct {
 	Number    int              `db:"number"`
 	Status    common.Status    `db:"status"`
 	StepOrder common.OrderType `db:"step_order"`
-	Deleted   bool             `db:"deleted"`
 }

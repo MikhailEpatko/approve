@@ -8,7 +8,6 @@ type RouteEntity struct {
 	Description string    `db:"description"`
 	Status      cm.Status `db:"status"`
 	IsApproved  bool      `db:"is_approved"`
-	Deleted     bool      `db:"deleted"`
 }
 
 func (e RouteEntity) ToResponse() RouteResponse {

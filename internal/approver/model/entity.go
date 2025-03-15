@@ -13,7 +13,6 @@ type ApproverEntity struct {
 	Email    string `db:"email"`
 	Number   int    `db:"number"`
 	Active   bool   `db:"active"`
-	Deleted  bool   `db:"deleted"`
 }
 
 func (a ApproverEntity) ToResolutionEntity() resm.ResolutionEntity {

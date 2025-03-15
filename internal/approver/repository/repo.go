@@ -2,8 +2,6 @@ package repository
 
 import (
 	am "approve/internal/approver/model"
-	"approve/internal/common"
-
 	"github.com/jmoiron/sqlx"
 )
 
@@ -32,13 +30,19 @@ func (r *approverRepo) FindByStepId(stepId int64) ([]am.ApproverEntity, error) {
 	return approvers, err
 }
 
-func (r *approverRepo) Save(approver am.ApproverEntity) (int64, error) {
-	res, err := r.db.NamedExec(
+func (r *approverRepo) Save(approver am.ApproverEntity) (id int64, err error) {
+	err = r.db.Get(
+		&id,
 		`insert into approver (step_id, guid, name, position, email, number)
-     values (:step_id, :guid, :name, :position, :email, :number)`,
-		&approver,
+     values ($1, $2, $3, $4, $5, $6) returning id`,
+		approver.StepId,
+		approver.Guid,
+		approver.Name,
+		approver.Position,
+		approver.Email,
+		approver.Number,
 	)
-	return common.SafeExecuteG(err, func() (int64, error) { return res.LastInsertId() })
+	return id, err
 }
 
 func (r *approverRepo) StartStepApprovers(

@@ -40,13 +40,18 @@ func (r *stepRepo) FindByGroupId(id int64) ([]sm.StepEntity, error) {
 	return steps, err
 }
 
-func (r *stepRepo) Save(step sm.StepEntity) (int64, error) {
-	res, err := r.db.NamedExec(
+func (r *stepRepo) Save(step sm.StepEntity) (id int64, err error) {
+	err = r.db.Get(
+		&id,
 		`insert into step (step_group_id, name, number, status, approver_order)
-     values (:step_group_id, :name, :number, :status, :approver_order)`,
-		&step,
+     values ($1, $2, $3, $4, $5) returning id`,
+		step.StepGroupId,
+		step.Name,
+		step.Number,
+		step.Status,
+		step.ApproverOrder,
 	)
-	return common.SafeExecuteG(err, func() (int64, error) { return res.LastInsertId() })
+	return id, err
 }
 
 func (r *stepRepo) StartSteps(

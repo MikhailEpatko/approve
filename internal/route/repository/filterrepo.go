@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"approve/internal/common"
 	rm "approve/internal/route/model"
 	"github.com/jmoiron/sqlx"
 	"strings"
@@ -15,13 +14,19 @@ func NewFindByFilterRouteRepository(db *sqlx.DB) FindByFilterRouteRepository {
 	return &routeRepo{db}
 }
 
-type params map[string]interface{}
+type parameters map[string]any
 
 func (r *routeRepo) FindByfilter(filter rm.FilterRouteRequest) ([]rm.RouteEntity, int64, error) {
 	var routes []rm.RouteEntity
 	var total int64
 	query, params := countByFilterQueryAndParams(filter)
-	err := r.db.Select(&total, query, params)
+	rows, err := r.db.NamedQuery(query, params)
+	if err != nil {
+		return nil, 0, err
+	}
+	if rows.Next() {
+		err = rows.Scan(&total)
+	}
 	if err != nil {
 		return nil, 0, err
 	}
@@ -29,24 +34,33 @@ func (r *routeRepo) FindByfilter(filter rm.FilterRouteRequest) ([]rm.RouteEntity
 		return routes, 0, nil
 	}
 	query, params = findByFilterQueryAndParams(filter)
-	err = r.db.Select(&routes, query, params)
+	rows, err = r.db.NamedQuery(query, params)
 	if err != nil {
 		return nil, 0, err
+	}
+	for rows.Next() {
+		var route rm.RouteEntity
+		err = rows.StructScan(&route)
+		if err != nil {
+			return nil, 0, err
+		}
+		routes = append(routes, route)
 	}
 	return routes, total, nil
 }
 
-func findByFilterQueryAndParams(filter rm.FilterRouteRequest) (string, params) {
-	params := make(params, 5)
+func findByFilterQueryAndParams(filter rm.FilterRouteRequest) (string, parameters) {
+	params := make(parameters, 5)
 	sb := strings.Builder{}
-	sb.WriteString("select r.* from route r")
-	if filter.Status != common.TEMPLATE {
+	sb.WriteString("select distinct r.* from route r")
+	if filter.Guid != "" {
 		sb.WriteString(` inner join step_group sg on r.id = sg.route_id
                      inner join step s on sg.id = s.step_group_id 
-                     inner join approver a on s.id = a.step_id
-                     where r.status = :status`)
-	} else {
-		sb.WriteString(" where r.status = :status")
+                     inner join approver a on s.id = a.step_id`)
+	}
+	sb.WriteString(" where 1=1")
+	if filter.Status != "" {
+		sb.WriteString(" and r.status = :status")
 	}
 	params["status"] = filter.Status
 	if filter.Guid != "" {
@@ -64,20 +78,24 @@ func findByFilterQueryAndParams(filter rm.FilterRouteRequest) (string, params) {
 	return sb.String(), params
 }
 
-func countByFilterQueryAndParams(filter rm.FilterRouteRequest) (string, params) {
-	params := make(params, 5)
+func countByFilterQueryAndParams(filter rm.FilterRouteRequest) (string, parameters) {
+	params := make(parameters, 5)
 	sb := strings.Builder{}
-	sb.WriteString("select count(r.*) from route r")
-	if filter.Status != common.TEMPLATE {
+	sb.WriteString("select count(distinct r.id) from route r")
+	if filter.Guid != "" {
 		sb.WriteString(` inner join step_group sg on r.id = sg.route_id
                      inner join step s on sg.id = s.step_group_id 
                      inner join approver a on s.id = a.step_id`)
-		sb.WriteString(" where r.status = :status and a.guid = :guid")
-		params["guid"] = filter.Guid
-	} else {
-		sb.WriteString(" where r.status = :status")
 	}
-	params["status"] = filter.Status
+	sb.WriteString(" where 1=1")
+	if filter.Status != "" {
+		sb.WriteString(" and r.status = :status")
+		params["status"] = filter.Status
+	}
+	if filter.Guid != "" {
+		sb.WriteString(" and a.guid = :guid")
+		params["guid"] = filter.Guid
+	}
 	if len(filter.Text) >= 3 {
 		sb.WriteString(` and (r.name ilike '%' || :text || '%'
                      or r.description ilike '%' || :text || '%')`)

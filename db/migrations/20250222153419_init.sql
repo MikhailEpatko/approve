@@ -10,7 +10,8 @@ create table if not exists route
   name        text                           not null,
   description text                           not null,
   status      status_enum default 'TEMPLATE' not null,
-  is_approved boolean     default false      not null
+  is_approved boolean     default false      not null,
+  unique (name)
 );
 
 create table if not exists step_group

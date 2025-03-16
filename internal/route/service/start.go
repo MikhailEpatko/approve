@@ -46,7 +46,7 @@ func (svc *StartRoute) stargGroups(
 	tx *sqlx.Tx,
 	routeId int64,
 ) error {
-	group, err := svc.stepGroupRepo.StartGroups(tx, routeId)
+	group, err := svc.stepGroupRepo.StartFirstGroup(tx, routeId)
 	if err == nil && group.Id > 0 {
 		err = svc.startSteps(tx, group)
 	}

@@ -1,14 +1,15 @@
-package repository
+package route
 
 import (
 	cm "approve/internal/common"
 	conf "approve/internal/config"
 	rm "approve/internal/route/model"
+	rr "approve/internal/route/repository"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-func setup(repo RouteRepository) rm.RouteEntity {
+func setup(repo rr.RouteRepository) rm.RouteEntity {
 	route := rm.RouteEntity{
 		Name:        "test name",
 		Description: "test description",
@@ -18,17 +19,15 @@ func setup(repo RouteRepository) rm.RouteEntity {
 	return route
 }
 
-func teardown(cleaner cm.DbCleaner) {
-	cleaner.ClearDb()
-}
-
 func TestRouteRepository(t *testing.T) {
 	a := assert.New(t)
 	cfg := conf.NewAppConfig()
 	db, err := conf.NewDB(cfg)
 	a.Nil(err)
-	routeRepo := NewRouteRepository(db)
-	cleaner := cm.NewCleaner(db)
+	routeRepo := rr.NewRouteRepository(db)
+	deleteRoutes := func() {
+		db.MustExec("delete from route")
+	}
 
 	t.Run("save route", func(t *testing.T) {
 		route := rm.RouteEntity{
@@ -40,7 +39,7 @@ func TestRouteRepository(t *testing.T) {
 
 		a.Nil(err)
 		a.NotEmpty(routeId)
-		teardown(cleaner)
+		deleteRoutes()
 	})
 
 	t.Run("get route by id", func(t *testing.T) {
@@ -55,7 +54,7 @@ func TestRouteRepository(t *testing.T) {
 		a.Equal(want.Description, got.Description)
 		a.Equal(want.Status, got.Status)
 		a.Equal(want.IsApproved, got.IsApproved)
-		teardown(cleaner)
+		deleteRoutes()
 	})
 
 	t.Run("start route", func(t *testing.T) {
@@ -72,7 +71,7 @@ func TestRouteRepository(t *testing.T) {
 		a.Equal(want.Description, got.Description)
 		a.Equal(want.IsApproved, got.IsApproved)
 		a.Equal(cm.STARTED, got.Status)
-		teardown(cleaner)
+		deleteRoutes()
 	})
 
 	t.Run("update route", func(t *testing.T) {
@@ -95,7 +94,7 @@ func TestRouteRepository(t *testing.T) {
 		a.Equal(toUpdate.Description, got.Description)
 		a.Equal(want.Status, got.Status)
 		a.Equal(want.IsApproved, got.IsApproved)
-		teardown(cleaner)
+		deleteRoutes()
 	})
 
 	t.Run("is route started (false)", func(t *testing.T) {
@@ -105,7 +104,7 @@ func TestRouteRepository(t *testing.T) {
 
 		a.Nil(err)
 		a.False(got)
-		teardown(cleaner)
+		deleteRoutes()
 	})
 
 	t.Run("is route started (true)", func(t *testing.T) {
@@ -118,7 +117,7 @@ func TestRouteRepository(t *testing.T) {
 
 		a.Nil(err)
 		a.True(got)
-		teardown(cleaner)
+		deleteRoutes()
 	})
 
 	t.Run("finish route (isApproved should be true)", func(t *testing.T) {
@@ -141,7 +140,7 @@ func TestRouteRepository(t *testing.T) {
 		a.Equal(want.Description, got.Description)
 		a.Equal(cm.FINISHED, got.Status)
 		a.True(got.IsApproved)
-		teardown(cleaner)
+		deleteRoutes()
 	})
 
 	t.Run("finish route (isApproved should be false)", func(t *testing.T) {
@@ -164,6 +163,6 @@ func TestRouteRepository(t *testing.T) {
 		a.Equal(want.Description, got.Description)
 		a.Equal(cm.FINISHED, got.Status)
 		a.False(got.IsApproved)
-		teardown(cleaner)
+		deleteRoutes()
 	})
 }

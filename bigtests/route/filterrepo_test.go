@@ -1,4 +1,4 @@
-package repository
+package route
 
 import (
 	am "approve/internal/approver/model"
@@ -6,6 +6,7 @@ import (
 	cm "approve/internal/common"
 	conf "approve/internal/config"
 	rm "approve/internal/route/model"
+	rr "approve/internal/route/repository"
 	sm "approve/internal/step/model"
 	sr "approve/internal/step/repository"
 	gm "approve/internal/stepgroup/model"
@@ -16,6 +17,7 @@ import (
 )
 
 var (
+	log          = cm.Logger
 	name1        = "route1"
 	description1 = "test route description 1"
 	status1      = cm.TEMPLATE
@@ -23,11 +25,10 @@ var (
 	description2 = "test route description 2"
 	status2      = cm.STARTED
 	guid         = "guid"
-	routes       RouteRepository
+	routes       rr.RouteRepository
 	stepGroups   gr.StepGroupRepository
 	steps        sr.StepRepository
 	approvers    ar.ApproverRepository
-	log          = cm.Logger
 )
 
 func TestFindByFilterRouteRepository(t *testing.T) {
@@ -35,17 +36,19 @@ func TestFindByFilterRouteRepository(t *testing.T) {
 	cfg := conf.NewAppConfig()
 	db, err := conf.NewDB(cfg)
 	a.Nil(err)
-	cleaner := cm.NewCleaner(db)
-	routes = NewRouteRepository(db)
+	routes = rr.NewRouteRepository(db)
 	stepGroups = gr.NewStepGroupRepository(db)
 	steps = sr.NewStepRepository(db)
 	approvers = ar.NewApproverRepository(db)
-	findByFilterRepo := NewFindByFilterRouteRepository(db)
+	findByFilterRepo := rr.NewFindByFilterRouteRepository(db)
+	deleteRoutes := func() {
+		db.MustExec("delete from route")
+	}
 
 	defer func() {
 		if r := recover(); r != nil {
 			log.Fatal(fmt.Sprintf("Recovered from panic: %s", r))
-			cleaner.ClearDb()
+			deleteRoutes()
 		}
 	}()
 
@@ -71,7 +74,7 @@ func TestFindByFilterRouteRepository(t *testing.T) {
 		a.Equal(name1, got[0].Name)
 		a.Equal(description1, got[0].Description)
 		a.False(got[0].IsApproved)
-		cleaner.ClearDb()
+		deleteRoutes()
 	})
 
 	t.Run("find a route by status STARTED", func(t *testing.T) {
@@ -96,7 +99,7 @@ func TestFindByFilterRouteRepository(t *testing.T) {
 		a.Equal(name2, got[0].Name)
 		a.Equal(description2, got[0].Description)
 		a.False(got[0].IsApproved)
-		cleaner.ClearDb()
+		deleteRoutes()
 	})
 
 	t.Run("there is no any route with status FINISHED", func(t *testing.T) {
@@ -117,7 +120,7 @@ func TestFindByFilterRouteRepository(t *testing.T) {
 		a.Nil(got)
 		a.Equal(int64(0), total)
 		a.Equal(0, len(got))
-		cleaner.ClearDb()
+		deleteRoutes()
 	})
 
 	t.Run("find a route by name 'ute1'", func(t *testing.T) {
@@ -142,7 +145,7 @@ func TestFindByFilterRouteRepository(t *testing.T) {
 		a.Equal(name1, got[0].Name)
 		a.Equal(description1, got[0].Description)
 		a.False(got[0].IsApproved)
-		cleaner.ClearDb()
+		deleteRoutes()
 	})
 
 	t.Run("find a route by description", func(t *testing.T) {
@@ -167,7 +170,7 @@ func TestFindByFilterRouteRepository(t *testing.T) {
 		a.Equal(name2, got[0].Name)
 		a.Equal(description2, got[0].Description)
 		a.False(got[0].IsApproved)
-		cleaner.ClearDb()
+		deleteRoutes()
 	})
 
 	t.Run("find a route by guid", func(t *testing.T) {
@@ -192,7 +195,7 @@ func TestFindByFilterRouteRepository(t *testing.T) {
 		a.Equal(name1, got[0].Name)
 		a.Equal(description1, got[0].Description)
 		a.False(got[0].IsApproved)
-		cleaner.ClearDb()
+		deleteRoutes()
 	})
 
 }

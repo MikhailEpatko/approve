@@ -11,4 +11,5 @@ type StepEntity struct {
 	Number        int              `db:"number"`
 	Status        common.Status    `db:"status"`
 	ApproverOrder common.OrderType `db:"approver_order"`
+	IsApproved    bool             `db:"is_approved"`
 }

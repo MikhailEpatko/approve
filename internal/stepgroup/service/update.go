@@ -12,7 +12,7 @@ type UpdateStepGroup struct {
 }
 
 func (svc *UpdateStepGroup) Execute(request gm.UpdateStepGroupRequest) (groupId int64, err error) {
-	isRouteStarted, err := svc.repo.IsRouteStarted(request.Id)
+	isRouteStarted, err := svc.repo.IsRouteProcessing(request.Id)
 	if err == nil && isRouteStarted {
 		err = fmt.Errorf("route was started and cannot be updated")
 	}

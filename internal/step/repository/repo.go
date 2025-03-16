@@ -43,13 +43,14 @@ func (r *stepRepo) FindByGroupId(id int64) ([]sm.StepEntity, error) {
 func (r *stepRepo) Save(step sm.StepEntity) (id int64, err error) {
 	err = r.db.Get(
 		&id,
-		`insert into step (step_group_id, name, number, status, approver_order)
-     values ($1, $2, $3, $4, $5) returning id`,
+		`insert into step (step_group_id, name, number, status, approver_order, is_approved)
+     values ($1, $2, $3, $4, $5, $6) returning id`,
 		step.StepGroupId,
 		step.Name,
 		step.Number,
 		step.Status,
 		step.ApproverOrder,
+		step.IsApproved,
 	)
 	return id, err
 }

@@ -1,12 +1,9 @@
 package route
 
 import (
+	"approve/bigtests/fixtures"
 	cm "approve/internal/common"
 	conf "approve/internal/config"
-	rm "approve/internal/route/model"
-	rr "approve/internal/route/repository"
-	sm "approve/internal/step/model"
-	sr "approve/internal/step/repository"
 	gm "approve/internal/stepgroup/model"
 	gr "approve/internal/stepgroup/repository"
 	"fmt"
@@ -17,11 +14,8 @@ import (
 var (
 	log           = cm.Logger
 	routeName     = "route1"
-	description   = "test route description 1"
 	status        = cm.STARTED
-	routeRepo     rr.RouteRepository
 	stepGroupRepo gr.StepGroupRepository
-	stepRepo      sr.StepRepository
 )
 
 func TestFindByFilterRouteRepository(t *testing.T) {
@@ -29,9 +23,8 @@ func TestFindByFilterRouteRepository(t *testing.T) {
 	cfg := conf.NewAppConfig()
 	db, err := conf.NewDB(cfg)
 	a.Nil(err)
-	routeRepo = rr.NewRouteRepository(db)
+	fx := fixtures.New(db)
 	stepGroupRepo = gr.NewStepGroupRepository(db)
-	stepRepo = sr.NewStepRepository(db)
 	deleteRoute := func() {
 		db.MustExec("delete from route")
 	}
@@ -44,10 +37,10 @@ func TestFindByFilterRouteRepository(t *testing.T) {
 	}()
 
 	t.Run("find a step group by route id", func(t *testing.T) {
-		route1 := route(routeName, status)
-		group11 := group(route1, 1, status, cm.SERIAL)
-		route2 := route(routeName, status)
-		_ = group(route2, 1, status, cm.PARALLEL_ALL_OF)
+		route1 := fx.Route(routeName, status)
+		group11 := fx.Group(route1, 1, status, cm.SERIAL)
+		route2 := fx.Route(routeName, status)
+		_ = fx.Group(route2, 1, status, cm.PARALLEL_ALL_OF)
 
 		got, err := stepGroupRepo.FindByRouteId(route1.Id)
 
@@ -59,9 +52,9 @@ func TestFindByFilterRouteRepository(t *testing.T) {
 	})
 
 	t.Run("stat first group", func(t *testing.T) {
-		route1 := route(routeName, status)
-		want := group(route1, 1, cm.NEW, cm.SERIAL)
-		group2Before := group(route1, 2, cm.NEW, cm.PARALLEL_ALL_OF)
+		route1 := fx.Route(routeName, status)
+		want := fx.Group(route1, 1, cm.NEW, cm.SERIAL)
+		group2Before := fx.Group(route1, 2, cm.NEW, cm.PARALLEL_ALL_OF)
 
 		tx := db.MustBegin()
 		got, err := stepGroupRepo.StartFirstGroup(tx, route1.Id)
@@ -86,8 +79,8 @@ func TestFindByFilterRouteRepository(t *testing.T) {
 	})
 
 	t.Run("should update group", func(t *testing.T) {
-		route := route(routeName, cm.NEW)
-		groupBefore := group(route, 1, cm.NEW, cm.SERIAL)
+		route := fx.Route(routeName, cm.NEW)
+		groupBefore := fx.Group(route, 1, cm.NEW, cm.SERIAL)
 		toUpdate := gm.StepGroupEntity{
 			Id:        groupBefore.Id,
 			Name:      "new name",
@@ -121,8 +114,8 @@ func TestFindByFilterRouteRepository(t *testing.T) {
 			cm.STARTED:  true,
 			cm.FINISHED: true,
 		} {
-			route := route(routeName, routeStatus)
-			group := group(route, 1, routeStatus, cm.SERIAL)
+			route := fx.Route(routeName, routeStatus)
+			group := fx.Group(route, 1, routeStatus, cm.SERIAL)
 
 			got, err := stepGroupRepo.IsRouteProcessing(group.Id)
 
@@ -133,8 +126,8 @@ func TestFindByFilterRouteRepository(t *testing.T) {
 	})
 
 	t.Run("finish step group", func(t *testing.T) {
-		route := route(routeName, status)
-		group := group(route, 1, status, cm.SERIAL)
+		route := fx.Route(routeName, status)
+		group := fx.Group(route, 1, status, cm.SERIAL)
 
 		tx := db.MustBegin()
 		a.Nil(stepGroupRepo.FinishGroup(tx, group.Id))
@@ -147,9 +140,9 @@ func TestFindByFilterRouteRepository(t *testing.T) {
 	})
 
 	t.Run("start next step group", func(t *testing.T) {
-		route := route(routeName, status)
-		group1 := group(route, 1, status, cm.SERIAL)
-		group2 := group(route, 2, cm.NEW, cm.SERIAL)
+		route := fx.Route(routeName, status)
+		group1 := fx.Group(route, 1, status, cm.SERIAL)
+		group2 := fx.Group(route, 2, cm.NEW, cm.SERIAL)
 
 		tx := db.MustBegin()
 		nextGroupId, err := stepGroupRepo.StartNextGroup(tx, route.Id, group1.Id)
@@ -165,10 +158,10 @@ func TestFindByFilterRouteRepository(t *testing.T) {
 	})
 
 	t.Run("calculate and set IsApproved when step order is SERIAL and all steps are approved (true)", func(t *testing.T) {
-		route := route(routeName, status)
-		group := group(route, 1, status, cm.SERIAL)
-		_ = step(group, 1, cm.FINISHED, cm.SERIAL, true)
-		lastStep := step(group, 2, cm.FINISHED, cm.PARALLEL_ALL_OF, true)
+		route := fx.Route(routeName, status)
+		group := fx.Group(route, 1, status, cm.SERIAL)
+		_ = fx.Step(group, 1, cm.FINISHED, cm.SERIAL, true)
+		lastStep := fx.Step(group, 2, cm.FINISHED, cm.PARALLEL_ALL_OF, true)
 
 		tx := db.MustBegin()
 		got, err := stepGroupRepo.CalculateAndSetIsApproved(
@@ -188,10 +181,10 @@ func TestFindByFilterRouteRepository(t *testing.T) {
 	})
 
 	t.Run("calculate and set IsApproved when step order is SERIAL and not all steps are approved (false)", func(t *testing.T) {
-		route := route(routeName, status)
-		group := group(route, 1, status, cm.SERIAL)
-		_ = step(group, 1, cm.FINISHED, cm.SERIAL, true)
-		lastStep := step(group, 2, cm.FINISHED, cm.PARALLEL_ALL_OF, false)
+		route := fx.Route(routeName, status)
+		group := fx.Group(route, 1, status, cm.SERIAL)
+		_ = fx.Step(group, 1, cm.FINISHED, cm.SERIAL, true)
+		lastStep := fx.Step(group, 2, cm.FINISHED, cm.PARALLEL_ALL_OF, false)
 
 		tx := db.MustBegin()
 		got, err := stepGroupRepo.CalculateAndSetIsApproved(
@@ -209,14 +202,14 @@ func TestFindByFilterRouteRepository(t *testing.T) {
 		a.False(groupAfter.IsApproved)
 		deleteRoute()
 	})
-	//=================
+
 	t.Run(
 		"calculate and set IsApproved when step order is PARALLEL_ALL_OF and all steps are approved (true)",
 		func(t *testing.T) {
-			route := route(routeName, status)
-			group := group(route, 1, status, cm.PARALLEL_ALL_OF)
-			_ = step(group, 1, cm.FINISHED, cm.SERIAL, true)
-			lastStep := step(group, 2, cm.FINISHED, cm.PARALLEL_ALL_OF, true)
+			route := fx.Route(routeName, status)
+			group := fx.Group(route, 1, status, cm.PARALLEL_ALL_OF)
+			_ = fx.Step(group, 1, cm.FINISHED, cm.SERIAL, true)
+			lastStep := fx.Step(group, 2, cm.FINISHED, cm.PARALLEL_ALL_OF, true)
 
 			tx := db.MustBegin()
 			got, err := stepGroupRepo.CalculateAndSetIsApproved(
@@ -238,10 +231,10 @@ func TestFindByFilterRouteRepository(t *testing.T) {
 	t.Run(
 		"calculate and set IsApproved when step order is PARALLEL_ALL_OF and not all steps are approved (false)",
 		func(t *testing.T) {
-			route := route(routeName, status)
-			group := group(route, 1, status, cm.PARALLEL_ALL_OF)
-			_ = step(group, 1, cm.FINISHED, cm.SERIAL, true)
-			lastStep := step(group, 2, cm.FINISHED, cm.PARALLEL_ALL_OF, false)
+			route := fx.Route(routeName, status)
+			group := fx.Group(route, 1, status, cm.PARALLEL_ALL_OF)
+			_ = fx.Step(group, 1, cm.FINISHED, cm.SERIAL, true)
+			lastStep := fx.Step(group, 2, cm.FINISHED, cm.PARALLEL_ALL_OF, false)
 
 			tx := db.MustBegin()
 			got, err := stepGroupRepo.CalculateAndSetIsApproved(
@@ -259,14 +252,14 @@ func TestFindByFilterRouteRepository(t *testing.T) {
 			a.False(groupAfter.IsApproved)
 			deleteRoute()
 		})
-	//=================
+
 	t.Run(
 		"calculate and set IsApproved when step order is PARALLEL_ANY_OF and all steps are approved (true)",
 		func(t *testing.T) {
-			route := route(routeName, status)
-			group := group(route, 1, status, cm.PARALLEL_ANY_OF)
-			_ = step(group, 1, cm.FINISHED, cm.SERIAL, true)
-			lastStep := step(group, 2, cm.FINISHED, cm.PARALLEL_ALL_OF, true)
+			route := fx.Route(routeName, status)
+			group := fx.Group(route, 1, status, cm.PARALLEL_ANY_OF)
+			_ = fx.Step(group, 1, cm.FINISHED, cm.SERIAL, true)
+			lastStep := fx.Step(group, 2, cm.FINISHED, cm.PARALLEL_ALL_OF, true)
 
 			tx := db.MustBegin()
 			got, err := stepGroupRepo.CalculateAndSetIsApproved(
@@ -288,10 +281,10 @@ func TestFindByFilterRouteRepository(t *testing.T) {
 	t.Run(
 		"calculate and set IsApproved when step order is PARALLEL_ANY_OF and one of steps is approved (true)",
 		func(t *testing.T) {
-			route := route(routeName, status)
-			group := group(route, 1, status, cm.PARALLEL_ANY_OF)
-			_ = step(group, 1, cm.FINISHED, cm.SERIAL, true)
-			lastStep := step(group, 2, cm.FINISHED, cm.PARALLEL_ALL_OF, false)
+			route := fx.Route(routeName, status)
+			group := fx.Group(route, 1, status, cm.PARALLEL_ANY_OF)
+			_ = fx.Step(group, 1, cm.FINISHED, cm.SERIAL, true)
+			lastStep := fx.Step(group, 2, cm.FINISHED, cm.PARALLEL_ALL_OF, false)
 
 			tx := db.MustBegin()
 			got, err := stepGroupRepo.CalculateAndSetIsApproved(
@@ -313,10 +306,10 @@ func TestFindByFilterRouteRepository(t *testing.T) {
 	t.Run(
 		"calculate and set IsApproved when step order is PARALLEL_ANY_OF and no one step is approved (false)",
 		func(t *testing.T) {
-			route := route(routeName, status)
-			group := group(route, 1, status, cm.PARALLEL_ANY_OF)
-			_ = step(group, 1, cm.FINISHED, cm.SERIAL, false)
-			lastStep := step(group, 2, cm.FINISHED, cm.PARALLEL_ALL_OF, false)
+			route := fx.Route(routeName, status)
+			group := fx.Group(route, 1, status, cm.PARALLEL_ANY_OF)
+			_ = fx.Step(group, 1, cm.FINISHED, cm.SERIAL, false)
+			lastStep := fx.Step(group, 2, cm.FINISHED, cm.PARALLEL_ALL_OF, false)
 
 			tx := db.MustBegin()
 			got, err := stepGroupRepo.CalculateAndSetIsApproved(
@@ -334,66 +327,4 @@ func TestFindByFilterRouteRepository(t *testing.T) {
 			a.False(groupAfter.IsApproved)
 			deleteRoute()
 		})
-
-}
-
-func route(
-	name string,
-	routeStatus cm.Status,
-) rm.RouteEntity {
-	route := rm.RouteEntity{
-		Name:        name,
-		Description: description,
-		Status:      routeStatus,
-	}
-	id, err := routeRepo.Save(route)
-	if err != nil {
-		panic(err)
-	}
-	route.Id = id
-	return route
-}
-
-func group(
-	route rm.RouteEntity,
-	number int,
-	groupStatus cm.Status,
-	stepOrder cm.OrderType,
-) gm.StepGroupEntity {
-	group := gm.StepGroupEntity{
-		RouteId:   route.Id,
-		Name:      fmt.Sprintf("%s-group-%d", routeName, number),
-		Number:    number,
-		Status:    groupStatus,
-		StepOrder: stepOrder,
-	}
-	id, err := stepGroupRepo.Save(group)
-	if err != nil {
-		panic(err)
-	}
-	group.Id = id
-	return group
-}
-
-func step(
-	group gm.StepGroupEntity,
-	number int,
-	orderStatus cm.Status,
-	approverOrder cm.OrderType,
-	isApproved bool,
-) sm.StepEntity {
-	step := sm.StepEntity{
-		StepGroupId:   group.Id,
-		Name:          fmt.Sprintf("%s-step-%d", group.Name, number),
-		Number:        number,
-		Status:        orderStatus,
-		ApproverOrder: approverOrder,
-		IsApproved:    isApproved,
-	}
-	id, err := stepRepo.Save(step)
-	if err != nil {
-		panic(err)
-	}
-	step.Id = id
-	return step
 }

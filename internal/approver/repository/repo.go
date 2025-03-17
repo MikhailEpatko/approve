@@ -33,14 +33,15 @@ func (r *approverRepo) FindByStepId(stepId int64) ([]am.ApproverEntity, error) {
 func (r *approverRepo) Save(approver am.ApproverEntity) (id int64, err error) {
 	err = r.db.Get(
 		&id,
-		`insert into approver (step_id, guid, name, position, email, number)
-     values ($1, $2, $3, $4, $5, $6) returning id`,
+		`insert into approver (step_id, guid, name, position, email, number, status)
+     values ($1, $2, $3, $4, $5, $6, $7) returning id`,
 		approver.StepId,
 		approver.Guid,
 		approver.Name,
 		approver.Position,
 		approver.Email,
 		approver.Number,
+		approver.Status,
 	)
 	return id, err
 }

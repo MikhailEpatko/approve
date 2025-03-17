@@ -1,11 +1,9 @@
 package main
 
 import (
-	"approve/internal/common"
+	cm "approve/internal/common"
 )
 
-var log = common.Logger
-
 func main() {
-	log.Info("Starting...")
+	cm.Logger.Info("Starting...")
 }

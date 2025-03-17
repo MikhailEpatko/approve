@@ -1,4 +1,4 @@
-package route
+package bigtests
 
 import (
 	cm "approve/internal/common"
@@ -61,6 +61,7 @@ func TestRouteRepository(t *testing.T) {
 		want := setup(routeRepo)
 
 		tx := db.MustBegin()
+		defer func() { _ = tx.Rollback() }()
 		a.Nil(routeRepo.StartRoute(tx, want.Id))
 		_ = tx.Commit()
 		got, err := routeRepo.GetById(want.Id)
@@ -110,6 +111,7 @@ func TestRouteRepository(t *testing.T) {
 	t.Run("is route started (true)", func(t *testing.T) {
 		route := setup(routeRepo)
 		tx := db.MustBegin()
+		defer func() { _ = tx.Rollback() }()
 		a.Nil(routeRepo.StartRoute(tx, route.Id))
 		_ = tx.Commit()
 
@@ -123,6 +125,7 @@ func TestRouteRepository(t *testing.T) {
 	t.Run("finish route (isApproved should be true)", func(t *testing.T) {
 		want := setup(routeRepo)
 		tx := db.MustBegin()
+		defer func() { _ = tx.Rollback() }()
 		a.Nil(routeRepo.StartRoute(tx, want.Id))
 		_ = tx.Commit()
 		isStarted, _ := routeRepo.IsRouteStarted(want.Id)
@@ -130,6 +133,7 @@ func TestRouteRepository(t *testing.T) {
 		a.True(isStarted)
 
 		tx = db.MustBegin()
+		defer func() { _ = tx.Rollback() }()
 		a.Nil(routeRepo.FinishRoute(tx, want.Id, true))
 		_ = tx.Commit()
 		got, err := routeRepo.GetById(want.Id)
@@ -146,6 +150,7 @@ func TestRouteRepository(t *testing.T) {
 	t.Run("finish route (isApproved should be false)", func(t *testing.T) {
 		want := setup(routeRepo)
 		tx := db.MustBegin()
+		defer func() { _ = tx.Rollback() }()
 		a.Nil(routeRepo.StartRoute(tx, want.Id))
 		_ = tx.Commit()
 		isStarted, _ := routeRepo.IsRouteStarted(want.Id)
@@ -153,6 +158,7 @@ func TestRouteRepository(t *testing.T) {
 		a.True(isStarted)
 
 		tx = db.MustBegin()
+		defer func() { _ = tx.Rollback() }()
 		a.Nil(routeRepo.FinishRoute(tx, want.Id, false))
 		_ = tx.Commit()
 		got, err := routeRepo.GetById(want.Id)

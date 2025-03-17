@@ -29,10 +29,11 @@ func (r *routeRepo) Save(
 ) (res int64, err error) {
 	err = r.db.Get(
 		&res,
-		"insert into route (name, description, status) values ($1, $2, $3) returning id",
+		"insert into route (name, description, status, is_approved) values ($1, $2, $3, $4) returning id",
 		route.Name,
 		route.Description,
 		route.Status,
+		route.IsApproved,
 	)
 	return res, err
 }

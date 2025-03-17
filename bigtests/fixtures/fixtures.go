@@ -1,7 +1,11 @@
 package fixtures
 
 import (
+	am "approve/internal/approver/model"
+	ar "approve/internal/approver/repository"
 	cm "approve/internal/common"
+	resm "approve/internal/resolution/model"
+	resr "approve/internal/resolution/repository"
 	rm "approve/internal/route/model"
 	rr "approve/internal/route/repository"
 	sm "approve/internal/step/model"
@@ -13,16 +17,20 @@ import (
 )
 
 type Fixtures struct {
-	routeRepo     rr.RouteRepository
-	stepGroupRepo gr.StepGroupRepository
-	stepRepo      sr.StepRepository
+	routeRepo      rr.RouteRepository
+	stepGroupRepo  gr.StepGroupRepository
+	stepRepo       sr.StepRepository
+	approverRepo   ar.ApproverRepository
+	resolutionRepo resr.ResolutionRepository
 }
 
 func New(db *sqlx.DB) Fixtures {
 	return Fixtures{
-		routeRepo:     rr.NewRouteRepository(db),
-		stepGroupRepo: gr.NewStepGroupRepository(db),
-		stepRepo:      sr.NewStepRepository(db),
+		routeRepo:      rr.NewRouteRepository(db),
+		stepGroupRepo:  gr.NewStepGroupRepository(db),
+		stepRepo:       sr.NewStepRepository(db),
+		approverRepo:   ar.NewApproverRepository(db),
+		resolutionRepo: resr.NewResolutionRepository(db),
 	}
 }
 
@@ -34,6 +42,7 @@ func (fx *Fixtures) Route(
 		Name:        name,
 		Description: "description",
 		Status:      routeStatus,
+		IsApproved:  false,
 	}
 	id, err := fx.routeRepo.Save(route)
 	if err != nil {
@@ -48,13 +57,15 @@ func (fx *Fixtures) Group(
 	number int,
 	groupStatus cm.Status,
 	stepOrder cm.OrderType,
+	isApproved bool,
 ) gm.StepGroupEntity {
 	group := gm.StepGroupEntity{
-		RouteId:   route.Id,
-		Name:      fmt.Sprintf("%s-group-%d", route.Name, number),
-		Number:    number,
-		Status:    groupStatus,
-		StepOrder: stepOrder,
+		RouteId:    route.Id,
+		Name:       fmt.Sprintf("%s-group-%d", route.Name, number),
+		Number:     number,
+		Status:     groupStatus,
+		StepOrder:  stepOrder,
+		IsApproved: isApproved,
 	}
 	id, err := fx.stepGroupRepo.Save(group)
 	if err != nil {
@@ -85,4 +96,43 @@ func (fx *Fixtures) Step(
 	}
 	step.Id = id
 	return step
+}
+
+func (fx *Fixtures) Approver(
+	step sm.StepEntity,
+	number int,
+	status cm.Status,
+) am.ApproverEntity {
+	approver := am.ApproverEntity{
+		StepId:   step.Id,
+		Guid:     fmt.Sprintf("guid-%d", number),
+		Name:     fmt.Sprintf("%s-approver-%d", step.Name, number),
+		Position: fmt.Sprintf("position-%d", number),
+		Email:    fmt.Sprintf("email-%d@mail.ru", number),
+		Number:   number,
+		Status:   status,
+	}
+	id, err := fx.approverRepo.Save(approver)
+	if err != nil {
+		panic(err)
+	}
+	approver.Id = id
+	return approver
+}
+
+func (fx *Fixtures) Resolution(
+	approver am.ApproverEntity,
+	isApproved bool,
+) resm.ResolutionEntity {
+	resolution := resm.ResolutionEntity{
+		ApproverId: approver.Id,
+		IsApproved: isApproved,
+		Comment:    "comment",
+	}
+	id, err := fx.resolutionRepo.Save(resolution)
+	if err != nil {
+		panic(err)
+	}
+	resolution.Id = id
+	return resolution
 }

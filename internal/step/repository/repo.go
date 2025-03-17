@@ -14,7 +14,6 @@ type StepRepository interface {
 	StartSteps(tx *sqlx.Tx, group gm.StepGroupEntity) ([]sm.StepEntity, error)
 	Update(step sm.StepEntity) (int64, error)
 	IsRouteStarted(stepId int64) (bool, error)
-	FinishStepsByRouteId(tx *sqlx.Tx, routeId int64) error
 	FinishStep(tx *sqlx.Tx, stepId int64) error
 	CalculateAndSetIsApproved(
 		tx *sqlx.Tx,
@@ -24,6 +23,7 @@ type StepRepository interface {
 	) (res bool, err error)
 	ExistsNotFinishedStepsInGroup(x *sqlx.Tx, stepGroupId int64) (bool, error)
 	StartNextStep(tx *sqlx.Tx, stepGroupId int64, stepId int64) (int64, error)
+	FindById(stepId int64) (sm.StepEntity, error)
 }
 
 type stepRepo struct {
@@ -32,6 +32,15 @@ type stepRepo struct {
 
 func NewStepRepository(db *sqlx.DB) StepRepository {
 	return &stepRepo{db}
+}
+
+func (r *stepRepo) FindById(stepId int64) (step sm.StepEntity, err error) {
+	err = r.db.Get(
+		&step,
+		`select * from step where id = $1`,
+		stepId,
+	)
+	return step, err
 }
 
 func (r *stepRepo) FindByGroupId(id int64) ([]sm.StepEntity, error) {
@@ -106,21 +115,6 @@ func (r *stepRepo) IsRouteStarted(stepId int64) (res bool, err error) {
 	return res, err
 }
 
-func (r *stepRepo) FinishStepsByRouteId(
-	tx *sqlx.Tx,
-	routeId int64,
-) error {
-	_, err := tx.Exec(
-		`update step 
-     set status = 'FINISHED'
-     where step.step_group_id in (
-       select id from step_group where route_id = $1
-     )`,
-		routeId,
-	)
-	return err
-}
-
 func (r *stepRepo) FinishStep(
 	tx *sqlx.Tx,
 	stepId int64,
@@ -164,7 +158,7 @@ func (r *stepRepo) ExistsNotFinishedStepsInGroup(
 	tx *sqlx.Tx,
 	stepGroupId int64,
 ) (res bool, err error) {
-	err = tx.Select(
+	err = tx.Get(
 		&res,
 		"select exists (select 1 from step where step_group_id = $1 and status != 'FINISHED')",
 		stepGroupId,

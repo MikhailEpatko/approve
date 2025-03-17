@@ -1,4 +1,4 @@
-package route
+package bigtests
 
 import (
 	am "approve/internal/approver/model"
@@ -17,7 +17,6 @@ import (
 )
 
 var (
-	log          = cm.Logger
 	name1        = "route1"
 	description1 = "test route description 1"
 	status1      = cm.TEMPLATE
@@ -47,7 +46,7 @@ func TestFindByFilterRouteRepository(t *testing.T) {
 
 	defer func() {
 		if r := recover(); r != nil {
-			log.Fatal(fmt.Sprintf("Recovered from panic: %s", r))
+			cm.Logger.Fatal(fmt.Sprintf("Recovered from panic: %s", r))
 			deleteRoutes()
 		}
 	}()

@@ -5,6 +5,7 @@ import (
 	cm "approve/internal/common"
 	resm "approve/internal/resolution/model"
 	rr "approve/internal/route/repository"
+	sm "approve/internal/step/model"
 	sr "approve/internal/step/repository"
 	gr "approve/internal/stepgroup/repository"
 	"github.com/jmoiron/sqlx"
@@ -37,7 +38,13 @@ func (svc *FinishStepGroupAndStartNext) Execute(
 	if err == nil && nextGroupId != 0 {
 		var nextStepId int64
 		nextStepId, err = svc.stepRepo.StartNextStep(tx, info.StepGroupId, info.StepId)
-		err = cm.SafeExecute(err, func() error { return svc.approverRepo.StartStepApprovers(tx, nextStepId) })
+		err = cm.SafeExecute(err, func() error {
+			var step = sm.StepEntity{
+				Id:            nextStepId,
+				ApproverOrder: info.ApproverOrder,
+			}
+			return svc.approverRepo.StartStepApprovers(tx, step)
+		})
 	} else {
 		err = cm.SafeExecute(err, func() error { return svc.routeRepo.FinishRoute(tx, info.RouteId, isGroupApproved) })
 	}

@@ -73,5 +73,5 @@ func (svc *StartRoute) startApprovers(
 	tx *sqlx.Tx,
 	step sm.StepEntity,
 ) error {
-	return svc.approverRepo.StartStepApprovers(tx, step.Id)
+	return svc.approverRepo.StartStepApprovers(tx, step)
 }

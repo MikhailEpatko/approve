@@ -4,6 +4,7 @@ import (
 	ar "approve/internal/approver/repository"
 	cm "approve/internal/common"
 	resm "approve/internal/resolution/model"
+	sm "approve/internal/step/model"
 	sr "approve/internal/step/repository"
 	gs "approve/internal/stepgroup/service"
 	"github.com/jmoiron/sqlx"
@@ -36,7 +37,13 @@ func (svc *FinishStepAndStartNext) Execute(
 		if info.StepOrder == cm.SERIAL {
 			var nextStepId int64
 			nextStepId, err = svc.stepRepo.StartNextStep(tx, info.StepGroupId, info.StepId)
-			err = cm.SafeExecute(err, func() error { return svc.approverRepo.StartStepApprovers(tx, nextStepId) })
+			err = cm.SafeExecute(err, func() error {
+				var step = sm.StepEntity{
+					Id:            nextStepId,
+					ApproverOrder: info.ApproverOrder,
+				}
+				return svc.approverRepo.StartStepApprovers(tx, step)
+			})
 		}
 	} else {
 		err = cm.SafeExecute(err, func() error { return svc.finishGroupAndStartNext.Execute(tx, info, isStepApproved) })

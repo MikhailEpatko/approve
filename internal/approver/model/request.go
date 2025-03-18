@@ -21,7 +21,7 @@ func (r CreateApproverRequest) ToEntity() ApproverEntity {
 }
 
 type UpdateApproverRequest struct {
-	Id       int64  `json:"step_id"  validate:"required,min=1"`
+	Id       int64  `json:"id"       validate:"required,min=1"`
 	Guid     string `json:"guid"     validate:"required,max=36"`
 	Name     string `json:"name"     validate:"required,max=150"`
 	Position string `json:"position" validate:"required,max=150"`

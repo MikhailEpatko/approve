@@ -1,11 +1,11 @@
-package bigtests
+package big
 
 import (
-	"approve/bigtests/fixtures"
 	cm "approve/internal/common"
 	conf "approve/internal/config"
 	sm "approve/internal/step/model"
 	sr "approve/internal/step/repository"
+	"approve/tests/big/fixtures"
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"testing"

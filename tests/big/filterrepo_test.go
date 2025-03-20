@@ -1,4 +1,4 @@
-package bigtests
+package big
 
 import (
 	am "approve/internal/approver/model"

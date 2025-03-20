@@ -68,7 +68,8 @@ create table if not exists resolution
       references approver
       on delete cascade,
   is_approved boolean         not null,
-  comment     text default '' not null
+  comment     text default '' not null,
+  unique (approver_id)
 );
 -- +goose StatementEnd
 

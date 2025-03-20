@@ -1,11 +1,11 @@
-package bigtests
+package big
 
 import (
-	"approve/bigtests/fixtures"
 	am "approve/internal/approver/model"
 	ar "approve/internal/approver/repository"
 	cm "approve/internal/common"
 	conf "approve/internal/config"
+	"approve/tests/big/fixtures"
 	"fmt"
 	"testing"
 

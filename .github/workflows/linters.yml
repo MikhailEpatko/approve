@@ -1,7 +1,12 @@
 name: Linters
 on:
-  push:
+  pull_request:
+    types: [opened, synchronize, reopened]
     branches: [ "main" ]
+
+concurrency:
+  group: main
+  cancel-in-progress: true
 
 jobs:
   golangci-lint:

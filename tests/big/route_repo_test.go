@@ -1,4 +1,4 @@
-package bigtests
+package big
 
 import (
 	cm "approve/internal/common"

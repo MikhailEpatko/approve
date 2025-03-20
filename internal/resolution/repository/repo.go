@@ -1,7 +1,6 @@
 package repository
 
 import (
-	cm "approve/internal/common"
 	rm "approve/internal/resolution/model"
 
 	"github.com/jmoiron/sqlx"
@@ -10,7 +9,6 @@ import (
 type ResolutionRepository interface {
 	FindByApproverId(id int64) ([]rm.ResolutionEntity, error)
 	Save(resolution rm.ResolutionEntity) (int64, error)
-	Update(resolution rm.ResolutionEntity) error
 	SaveTx(tx *sqlx.Tx, resolution rm.ResolutionEntity) (int64, error)
 	ApprovingInfoTx(tx *sqlx.Tx, approverId int64) (rm.ApprovingInfoEntity, error)
 }
@@ -29,40 +27,33 @@ func (r *resolutionRepo) FindByApproverId(id int64) ([]rm.ResolutionEntity, erro
 	return resolutions, err
 }
 
-func (r *resolutionRepo) Save(resolution rm.ResolutionEntity) (id int64, err error) {
+func (r *resolutionRepo) Save(resolution rm.ResolutionEntity) (resolutionId int64, err error) {
 	err = r.db.Get(
-		&id,
+		&resolutionId,
 		`insert into resolution (approver_id, is_approved, comment)
-     values ($1, $2, $3) returning id`,
+     values ($1, $2, $3)
+     returning id`,
 		resolution.ApproverId,
 		resolution.IsApproved,
 		resolution.Comment,
 	)
-	return id, err
-}
-
-func (r *resolutionRepo) Update(resolution rm.ResolutionEntity) error {
-	_, err := r.db.NamedExec(
-		`update resolution
-     set
-       is_approved = :is_approved,
-       comment = :comment
-     where id = :id`,
-		&resolution,
-	)
-	return err
+	return resolutionId, err
 }
 
 func (r *resolutionRepo) SaveTx(
 	tx *sqlx.Tx,
 	resolution rm.ResolutionEntity,
-) (int64, error) {
-	res, err := tx.NamedExec(
+) (resolutionId int64, err error) {
+	err = tx.Get(
+		&resolutionId,
 		`insert into resolution (approver_id, is_approved, comment)
-     values (:approver_id, :is_approved, :comment)`,
-		resolution,
+     values ($1, $2, $3)
+     returning id`,
+		resolution.ApproverId,
+		resolution.IsApproved,
+		resolution.Comment,
 	)
-	return cm.SafeExecuteG(err, func() (int64, error) { return res.LastInsertId() })
+	return resolutionId, err
 }
 
 func (r *resolutionRepo) ApprovingInfoTx(

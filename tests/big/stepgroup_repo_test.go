@@ -14,7 +14,7 @@ import (
 var (
 	routeName     = "route1"
 	status        = cm.STARTED
-	stepGroupRepo gr.StepGroupRepository
+	stepGroupRepo *gr.StepGroupRepository
 )
 
 func TestStepGroupRepository(t *testing.T) {

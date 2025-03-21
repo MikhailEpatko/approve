@@ -24,10 +24,10 @@ var (
 	description2 = "test route description 2"
 	status2      = cm.STARTED
 	guid         = "guid"
-	routes       rr.RouteRepository
-	stepGroups   gr.StepGroupRepository
-	steps        sr.StepRepository
-	approvers    ar.ApproverRepository
+	routes       *rr.RouteRepository
+	stepGroups   *gr.StepGroupRepository
+	steps        *sr.StepRepository
+	approvers    *ar.ApproverRepository
 )
 
 func TestFindByFilterRouteRepository(t *testing.T) {

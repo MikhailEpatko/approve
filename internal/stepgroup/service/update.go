@@ -3,12 +3,16 @@ package service
 import (
 	cm "approve/internal/common"
 	gm "approve/internal/stepgroup/model"
-	gr "approve/internal/stepgroup/repository"
 	"fmt"
 )
 
+type UpdateStepGroupRepository interface {
+	IsRouteProcessing(stepGroupId int64) (bool, error)
+	Update(group gm.StepGroupEntity) (int64, error)
+}
+
 type UpdateStepGroup struct {
-	repo gr.StepGroupRepository
+	repo UpdateStepGroupRepository
 }
 
 func (svc *UpdateStepGroup) Execute(request gm.UpdateStepGroupRequest) (groupId int64, err error) {

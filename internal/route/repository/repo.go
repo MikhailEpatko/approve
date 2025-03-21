@@ -6,25 +6,15 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type RouteRepository interface {
-	Save(entity rm.RouteEntity) (int64, error)
-	StartRoute(tx *sqlx.Tx, id int64) error
-	Update(route rm.RouteEntity) (int64, error)
-	IsRouteStarted(routeId int64) (bool, error)
-	FinishRoute(tx *sqlx.Tx, routeId int64, isGroupApproved bool) error
-	GetById(id int64) (rm.RouteEntity, error)
-	DeleteById(routeId int64) error
-}
-
-type routeRepo struct {
+type RouteRepository struct {
 	db *sqlx.DB
 }
 
-func NewRouteRepository(db *sqlx.DB) RouteRepository {
-	return &routeRepo{db}
+func NewRouteRepository(db *sqlx.DB) *RouteRepository {
+	return &RouteRepository{db}
 }
 
-func (r *routeRepo) Save(
+func (r *RouteRepository) Save(
 	route rm.RouteEntity,
 ) (res int64, err error) {
 	err = r.db.Get(
@@ -38,7 +28,7 @@ func (r *routeRepo) Save(
 	return res, err
 }
 
-func (r *routeRepo) StartRoute(
+func (r *RouteRepository) StartRoute(
 	tx *sqlx.Tx,
 	routeId int64,
 ) error {
@@ -46,7 +36,7 @@ func (r *routeRepo) StartRoute(
 	return err
 }
 
-func (r *routeRepo) Update(route rm.RouteEntity) (int64, error) {
+func (r *RouteRepository) Update(route rm.RouteEntity) (int64, error) {
 	_, err := r.db.NamedExec(
 		`update route 
      set 
@@ -58,7 +48,7 @@ func (r *routeRepo) Update(route rm.RouteEntity) (int64, error) {
 	return route.Id, err
 }
 
-func (r *routeRepo) IsRouteStarted(routeId int64) (res bool, err error) {
+func (r *RouteRepository) IsRouteStarted(routeId int64) (res bool, err error) {
 	err = r.db.Get(
 		&res,
 		`select exists (select 1 
@@ -70,7 +60,7 @@ func (r *routeRepo) IsRouteStarted(routeId int64) (res bool, err error) {
 	return res, err
 }
 
-func (r *routeRepo) FinishRoute(
+func (r *RouteRepository) FinishRoute(
 	tx *sqlx.Tx,
 	routeId int64,
 	isGroupApproved bool,
@@ -87,12 +77,12 @@ func (r *routeRepo) FinishRoute(
 	return err
 }
 
-func (r *routeRepo) GetById(id int64) (res rm.RouteEntity, err error) {
+func (r *RouteRepository) GetById(id int64) (res rm.RouteEntity, err error) {
 	err = r.db.Get(&res, "select * from route where id = $1", id)
 	return res, err
 }
 
-func (r *routeRepo) DeleteById(routeId int64) error {
+func (r *RouteRepository) DeleteById(routeId int64) error {
 	_, err := r.db.Exec("delete from route where id = $1", routeId)
 	return err
 }

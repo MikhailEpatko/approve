@@ -3,12 +3,16 @@ package service
 import (
 	cm "approve/internal/common"
 	sm "approve/internal/step/model"
-	sr "approve/internal/step/repository"
 	"errors"
 )
 
+type UpdateStepRepository interface {
+	Update(step sm.StepEntity) (int64, error)
+	IsRouteStarted(stepId int64) (bool, error)
+}
+
 type UpdateStep struct {
-	repo sr.StepRepository
+	repo UpdateStepRepository
 }
 
 func (svc *UpdateStep) Execute(request sm.UpdateStepRequest) (routeId int64, err error) {

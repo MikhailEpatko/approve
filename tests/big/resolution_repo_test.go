@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	resolutionRepo resr.ResolutionRepository
+	resolutionRepo *resr.ResolutionRepository
 )
 
 func TestResolutionRepository(t *testing.T) {

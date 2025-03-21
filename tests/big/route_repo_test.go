@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func setup(repo rr.RouteRepository) rm.RouteEntity {
+func setup(repo *rr.RouteRepository) rm.RouteEntity {
 	route := rm.RouteEntity{
 		Name:        "test name",
 		Description: "test description",

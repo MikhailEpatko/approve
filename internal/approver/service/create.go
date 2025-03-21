@@ -2,11 +2,14 @@ package service
 
 import (
 	am "approve/internal/approver/model"
-	ar "approve/internal/approver/repository"
 )
 
+type SaveApproverRepository interface {
+	Save(approver am.ApproverEntity) (int64, error)
+}
+
 type CreateApproverTemplate struct {
-	approverRepo ar.ApproverRepository
+	approverRepo SaveApproverRepository
 }
 
 func (svc *CreateApproverTemplate) Execute(

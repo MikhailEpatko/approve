@@ -2,13 +2,17 @@ package service
 
 import (
 	am "approve/internal/approver/model"
-	ar "approve/internal/approver/repository"
 	cm "approve/internal/common"
 	"fmt"
 )
 
+type UpdateApproverRepository interface {
+	Update(approver am.ApproverEntity) (int64, error)
+	IsRouteStarted(approverId int64) (bool, error)
+}
+
 type UpdateApprover struct {
-	repo ar.ApproverRepository
+	repo UpdateApproverRepository
 }
 
 func (svc *UpdateApprover) Execute(request am.UpdateApproverRequest) (routeId int64, err error) {

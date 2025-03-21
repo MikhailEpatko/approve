@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	approverRepo ar.ApproverRepository
+	approverRepo *ar.ApproverRepository
 )
 
 func TestApproverRepository(t *testing.T) {

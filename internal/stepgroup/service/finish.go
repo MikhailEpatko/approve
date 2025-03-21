@@ -1,21 +1,40 @@
 package service
 
 import (
-	ar "approve/internal/approver/repository"
 	cm "approve/internal/common"
 	resm "approve/internal/resolution/model"
-	rr "approve/internal/route/repository"
 	sm "approve/internal/step/model"
-	sr "approve/internal/step/repository"
-	gr "approve/internal/stepgroup/repository"
 	"github.com/jmoiron/sqlx"
 )
 
+type FinishRouteRepository interface {
+	FinishRoute(tx *sqlx.Tx, routeId int64, isGroupApproved bool) error
+}
+
+type FinishStepGroupRepository interface {
+	FinishGroup(tx *sqlx.Tx, stepGroupId int64) error
+	CalculateAndSetIsApproved(
+		tx *sqlx.Tx,
+		stepGroupId int64,
+		stepOrder cm.OrderType,
+		isStepApproved bool,
+	) (bool, error)
+	StartNextGroup(tx *sqlx.Tx, routeId int64, stepGroupId int64) (int64, error)
+}
+
+type FinishStepRepository interface {
+	StartNextStep(tx *sqlx.Tx, stepGroupId int64, stepId int64) (int64, error)
+}
+
+type FinishApproverRepository interface {
+	StartStepApprovers(tx *sqlx.Tx, step sm.StepEntity) error
+}
+
 type FinishStepGroupAndStartNext struct {
-	routeRepo    rr.RouteRepository
-	groupRepo    gr.StepGroupRepository
-	stepRepo     sr.StepRepository
-	approverRepo ar.ApproverRepository
+	routeRepo    FinishRouteRepository
+	groupRepo    FinishStepGroupRepository
+	stepRepo     FinishStepRepository
+	approverRepo FinishApproverRepository
 }
 
 func (svc *FinishStepGroupAndStartNext) Execute(

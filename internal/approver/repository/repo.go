@@ -6,38 +6,26 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type ApproverRepository interface {
-	FindByStepId(stepId int64) ([]am.ApproverEntity, error)
-	Save(approver am.ApproverEntity) (int64, error)
-	StartStepApprovers(tx *sqlx.Tx, step sm.StepEntity) error
-	Update(approver am.ApproverEntity) (int64, error)
-	FinishApprover(tx *sqlx.Tx, approverId int64) error
-	ExistNotFinishedApproversInStep(tx *sqlx.Tx, stepId int64) (bool, error)
-	StartNextApprover(tx *sqlx.Tx, stepId int64, approverId int64) error
-	IsRouteStarted(approverId int64) (bool, error)
-	FinishStepApprovers(tx *sqlx.Tx, stepId int64) error
-	FindById(approverId int64) (am.ApproverEntity, error)
-}
-type approverRepo struct {
+type ApproverRepository struct {
 	db *sqlx.DB
 }
 
-func NewApproverRepository(db *sqlx.DB) ApproverRepository {
-	return &approverRepo{db}
+func NewApproverRepository(db *sqlx.DB) *ApproverRepository {
+	return &ApproverRepository{db}
 }
 
-func (r *approverRepo) FindById(approverId int64) (approver am.ApproverEntity, err error) {
+func (r *ApproverRepository) FindById(approverId int64) (approver am.ApproverEntity, err error) {
 	err = r.db.Get(&approver, "select * from approver where id = $1", approverId)
 	return approver, err
 }
 
-func (r *approverRepo) FindByStepId(stepId int64) ([]am.ApproverEntity, error) {
+func (r *ApproverRepository) FindByStepId(stepId int64) ([]am.ApproverEntity, error) {
 	var approvers []am.ApproverEntity
 	err := r.db.Select(&approvers, "select * from approver where step_id = $1", stepId)
 	return approvers, err
 }
 
-func (r *approverRepo) Save(approver am.ApproverEntity) (id int64, err error) {
+func (r *ApproverRepository) Save(approver am.ApproverEntity) (id int64, err error) {
 	err = r.db.Get(
 		&id,
 		`insert into approver (step_id, guid, name, position, email, number, status)
@@ -53,7 +41,7 @@ func (r *approverRepo) Save(approver am.ApproverEntity) (id int64, err error) {
 	return id, err
 }
 
-func (r *approverRepo) StartStepApprovers(
+func (r *ApproverRepository) StartStepApprovers(
 	tx *sqlx.Tx,
 	step sm.StepEntity,
 ) error {
@@ -67,7 +55,7 @@ func (r *approverRepo) StartStepApprovers(
 	return err
 }
 
-func (r *approverRepo) Update(approver am.ApproverEntity) (approverId int64, err error) {
+func (r *ApproverRepository) Update(approver am.ApproverEntity) (approverId int64, err error) {
 	_, err = r.db.NamedExec(
 		`update approver 
      set name = :name,
@@ -81,7 +69,7 @@ func (r *approverRepo) Update(approver am.ApproverEntity) (approverId int64, err
 	return approver.Id, err
 }
 
-func (r *approverRepo) FinishApprover(
+func (r *ApproverRepository) FinishApprover(
 	tx *sqlx.Tx,
 	approverId int64,
 ) error {
@@ -89,7 +77,7 @@ func (r *approverRepo) FinishApprover(
 	return err
 }
 
-func (r *approverRepo) FinishStepApprovers(
+func (r *ApproverRepository) FinishStepApprovers(
 	tx *sqlx.Tx,
 	stepId int64,
 ) error {
@@ -102,7 +90,7 @@ func (r *approverRepo) FinishStepApprovers(
 	return err
 }
 
-func (r *approverRepo) ExistNotFinishedApproversInStep(
+func (r *ApproverRepository) ExistNotFinishedApproversInStep(
 	tx *sqlx.Tx,
 	stepId int64,
 ) (res bool, err error) {
@@ -114,7 +102,7 @@ func (r *approverRepo) ExistNotFinishedApproversInStep(
 	return res, err
 }
 
-func (r *approverRepo) StartNextApprover(
+func (r *ApproverRepository) StartNextApprover(
 	tx *sqlx.Tx,
 	stepId int64,
 	approverId int64,
@@ -130,7 +118,7 @@ func (r *approverRepo) StartNextApprover(
 	return err
 }
 
-func (a *approverRepo) IsRouteStarted(routeId int64) (res bool, err error) {
+func (a *ApproverRepository) IsRouteStarted(routeId int64) (res bool, err error) {
 	err = a.db.Get(
 		&res,
 		`select exists (select 1 

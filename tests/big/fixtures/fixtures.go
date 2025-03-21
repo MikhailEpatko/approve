@@ -17,11 +17,11 @@ import (
 )
 
 type Fixtures struct {
-	routeRepo      rr.RouteRepository
-	stepGroupRepo  gr.StepGroupRepository
-	stepRepo       sr.StepRepository
-	approverRepo   ar.ApproverRepository
-	resolutionRepo resr.ResolutionRepository
+	routeRepo      *rr.RouteRepository
+	stepGroupRepo  *gr.StepGroupRepository
+	stepRepo       *sr.StepRepository
+	approverRepo   *ar.ApproverRepository
+	resolutionRepo *resr.ResolutionRepository
 }
 
 func New(db *sqlx.DB) Fixtures {

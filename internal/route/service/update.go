@@ -3,12 +3,16 @@ package service
 import (
 	cm "approve/internal/common"
 	rm "approve/internal/route/model"
-	rr "approve/internal/route/repository"
 	"fmt"
 )
 
+type UpdateRouteRepository interface {
+	Update(route rm.RouteEntity) (int64, error)
+	IsRouteStarted(routeId int64) (bool, error)
+}
+
 type UpdateRoute struct {
-	repo rr.RouteRepository
+	repo UpdateRouteRepository
 }
 
 func (svc *UpdateRoute) Execute(request rm.UpdateRouteRequest) (routeId int64, err error) {

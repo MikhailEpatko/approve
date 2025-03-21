@@ -2,11 +2,14 @@ package service
 
 import (
 	rm "approve/internal/route/model"
-	rr "approve/internal/route/repository"
 )
 
+type FindByFilterRouteRepository interface {
+	FindByfilter(filter rm.FilterRouteRequest) ([]rm.RouteEntity, int64, error)
+}
+
 type FindRoutesByFilter struct {
-	repo rr.FindByFilterRouteRepository
+	repo FindByFilterRouteRepository
 }
 
 func (service *FindRoutesByFilter) Execute(filter rm.FilterRouteRequest) (result []rm.RouteResponse, total int64, err error) {

@@ -8,33 +8,15 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type StepRepository interface {
-	FindByGroupId(id int64) ([]sm.StepEntity, error)
-	Save(step sm.StepEntity) (int64, error)
-	StartSteps(tx *sqlx.Tx, group gm.StepGroupEntity) ([]sm.StepEntity, error)
-	Update(step sm.StepEntity) (int64, error)
-	IsRouteStarted(stepId int64) (bool, error)
-	FinishStep(tx *sqlx.Tx, stepId int64) error
-	CalculateAndSetIsApproved(
-		tx *sqlx.Tx,
-		stepId int64,
-		approverOrder common.OrderType,
-		isResolutionApproved bool,
-	) (res bool, err error)
-	ExistsNotFinishedStepsInGroup(x *sqlx.Tx, stepGroupId int64) (bool, error)
-	StartNextStep(tx *sqlx.Tx, stepGroupId int64, stepId int64) (int64, error)
-	FindById(stepId int64) (sm.StepEntity, error)
-}
-
-type stepRepo struct {
+type StepRepository struct {
 	db *sqlx.DB
 }
 
-func NewStepRepository(db *sqlx.DB) StepRepository {
-	return &stepRepo{db}
+func NewStepRepository(db *sqlx.DB) *StepRepository {
+	return &StepRepository{db}
 }
 
-func (r *stepRepo) FindById(stepId int64) (step sm.StepEntity, err error) {
+func (r *StepRepository) FindById(stepId int64) (step sm.StepEntity, err error) {
 	err = r.db.Get(
 		&step,
 		`select * from step where id = $1`,
@@ -43,13 +25,13 @@ func (r *stepRepo) FindById(stepId int64) (step sm.StepEntity, err error) {
 	return step, err
 }
 
-func (r *stepRepo) FindByGroupId(id int64) ([]sm.StepEntity, error) {
+func (r *StepRepository) FindByGroupId(id int64) ([]sm.StepEntity, error) {
 	var steps []sm.StepEntity
 	err := r.db.Select(&steps, "select * from step where step_group_id = $1", id)
 	return steps, err
 }
 
-func (r *stepRepo) Save(step sm.StepEntity) (id int64, err error) {
+func (r *StepRepository) Save(step sm.StepEntity) (id int64, err error) {
 	err = r.db.Get(
 		&id,
 		`insert into step (step_group_id, name, number, status, approver_order, is_approved)
@@ -64,7 +46,7 @@ func (r *stepRepo) Save(step sm.StepEntity) (id int64, err error) {
 	return id, err
 }
 
-func (r *stepRepo) StartSteps(
+func (r *StepRepository) StartSteps(
 	tx *sqlx.Tx,
 	group gm.StepGroupEntity,
 ) ([]sm.StepEntity, error) {
@@ -87,7 +69,7 @@ func (r *stepRepo) StartSteps(
 	return saved, err
 }
 
-func (r *stepRepo) Update(step sm.StepEntity) (stepId int64, err error) {
+func (r *StepRepository) Update(step sm.StepEntity) (stepId int64, err error) {
 	_, err = r.db.NamedExec(
 		`update step 
      set name = :name,
@@ -102,7 +84,7 @@ func (r *stepRepo) Update(step sm.StepEntity) (stepId int64, err error) {
 	return stepId, err
 }
 
-func (r *stepRepo) IsRouteStarted(stepId int64) (res bool, err error) {
+func (r *StepRepository) IsRouteStarted(stepId int64) (res bool, err error) {
 	err = r.db.Get(
 		&res,
 		`select exists (
@@ -115,7 +97,7 @@ func (r *stepRepo) IsRouteStarted(stepId int64) (res bool, err error) {
 	return res, err
 }
 
-func (r *stepRepo) FinishStep(
+func (r *StepRepository) FinishStep(
 	tx *sqlx.Tx,
 	stepId int64,
 ) error {
@@ -123,7 +105,7 @@ func (r *stepRepo) FinishStep(
 	return err
 }
 
-func (r *stepRepo) CalculateAndSetIsApproved(
+func (r *StepRepository) CalculateAndSetIsApproved(
 	tx *sqlx.Tx,
 	stepId int64,
 	approverOrder common.OrderType,
@@ -154,7 +136,7 @@ func (r *stepRepo) CalculateAndSetIsApproved(
 	return res, err
 }
 
-func (r *stepRepo) ExistsNotFinishedStepsInGroup(
+func (r *StepRepository) ExistsNotFinishedStepsInGroup(
 	tx *sqlx.Tx,
 	stepGroupId int64,
 ) (res bool, err error) {
@@ -166,7 +148,7 @@ func (r *stepRepo) ExistsNotFinishedStepsInGroup(
 	return res, err
 }
 
-func (r *stepRepo) StartNextStep(
+func (r *StepRepository) StartNextStep(
 	tx *sqlx.Tx,
 	stepGroupId int64,
 	stepId int64,

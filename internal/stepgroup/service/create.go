@@ -2,11 +2,14 @@ package service
 
 import (
 	gm "approve/internal/stepgroup/model"
-	gr "approve/internal/stepgroup/repository"
 )
 
+type StepGroupRepository interface {
+	Save(stepGroup gm.StepGroupEntity) (int64, error)
+}
+
 type CreateStepGroupTemplate struct {
-	repo gr.StepGroupRepository
+	repo StepGroupRepository
 }
 
 func (svc *CreateStepGroupTemplate) Execute(

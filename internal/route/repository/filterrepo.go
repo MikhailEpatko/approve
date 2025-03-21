@@ -6,17 +6,13 @@ import (
 	"strings"
 )
 
-type FindByFilterRouteRepository interface {
-	FindByfilter(filter rm.FilterRouteRequest) ([]rm.RouteEntity, int64, error)
-}
-
-func NewFindByFilterRouteRepository(db *sqlx.DB) FindByFilterRouteRepository {
-	return &routeRepo{db}
+func NewFindByFilterRouteRepository(db *sqlx.DB) *RouteRepository {
+	return &RouteRepository{db}
 }
 
 type parameters map[string]any
 
-func (r *routeRepo) FindByfilter(filter rm.FilterRouteRequest) ([]rm.RouteEntity, int64, error) {
+func (r *RouteRepository) FindByfilter(filter rm.FilterRouteRequest) ([]rm.RouteEntity, int64, error) {
 	var routes []rm.RouteEntity
 	var total int64
 	query, params := countByFilterQueryAndParams(filter)

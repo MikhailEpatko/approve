@@ -1,14 +1,18 @@
 package service
 
 import (
-	ar "approve/internal/approver/repository"
 	cm "approve/internal/common"
 	resm "approve/internal/resolution/model"
 	"github.com/jmoiron/sqlx"
 )
 
+type ProcessAnyOfApproverRepository interface {
+	ExistNotFinishedApproversInStep(tx *sqlx.Tx, stepId int64) (bool, error)
+	FinishStepApprovers(tx *sqlx.Tx, stepId int64) error
+}
+
 type ProcessAnyOfStep struct {
-	approverRepo ar.ApproverRepository
+	approverRepo ProcessAnyOfApproverRepository
 	finishStep   FinishStepAndStartNext
 }
 

@@ -1,33 +1,26 @@
 package repository
 
 import (
-	rm "approve/internal/resolution/model"
+	resm "approve/internal/resolution/model"
 
 	"github.com/jmoiron/sqlx"
 )
 
-type ResolutionRepository interface {
-	FindByApproverId(id int64) ([]rm.ResolutionEntity, error)
-	Save(resolution rm.ResolutionEntity) (int64, error)
-	SaveTx(tx *sqlx.Tx, resolution rm.ResolutionEntity) (int64, error)
-	ApprovingInfoTx(tx *sqlx.Tx, approverId int64) (rm.ApprovingInfoEntity, error)
-}
-
-type resolutionRepo struct {
+type ResolutionRepository struct {
 	db *sqlx.DB
 }
 
-func NewResolutionRepository(db *sqlx.DB) ResolutionRepository {
-	return &resolutionRepo{db}
+func NewResolutionRepository(db *sqlx.DB) *ResolutionRepository {
+	return &ResolutionRepository{db}
 }
 
-func (r *resolutionRepo) FindByApproverId(id int64) ([]rm.ResolutionEntity, error) {
-	var resolutions []rm.ResolutionEntity
+func (r *ResolutionRepository) FindByApproverId(id int64) ([]resm.ResolutionEntity, error) {
+	var resolutions []resm.ResolutionEntity
 	err := r.db.Select(&resolutions, "select * from resolution where approver_id = $1", id)
 	return resolutions, err
 }
 
-func (r *resolutionRepo) Save(resolution rm.ResolutionEntity) (resolutionId int64, err error) {
+func (r *ResolutionRepository) Save(resolution resm.ResolutionEntity) (resolutionId int64, err error) {
 	err = r.db.Get(
 		&resolutionId,
 		`insert into resolution (approver_id, is_approved, comment)
@@ -40,9 +33,9 @@ func (r *resolutionRepo) Save(resolution rm.ResolutionEntity) (resolutionId int6
 	return resolutionId, err
 }
 
-func (r *resolutionRepo) SaveTx(
+func (r *ResolutionRepository) SaveTx(
 	tx *sqlx.Tx,
-	resolution rm.ResolutionEntity,
+	resolution resm.ResolutionEntity,
 ) (resolutionId int64, err error) {
 	err = tx.Get(
 		&resolutionId,
@@ -56,10 +49,10 @@ func (r *resolutionRepo) SaveTx(
 	return resolutionId, err
 }
 
-func (r *resolutionRepo) ApprovingInfoTx(
+func (r *ResolutionRepository) ApprovingInfoTx(
 	tx *sqlx.Tx,
 	approverId int64,
-) (res rm.ApprovingInfoEntity, err error) {
+) (res resm.ApprovingInfoEntity, err error) {
 	err = tx.Get(
 		&res,
 		`select 

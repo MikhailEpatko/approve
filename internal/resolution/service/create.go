@@ -1,11 +1,9 @@
 package service
 
 import (
-	ar "approve/internal/approver/repository"
 	cm "approve/internal/common"
 	cfg "approve/internal/config"
 	resm "approve/internal/resolution/model"
-	resr "approve/internal/resolution/repository"
 	ss "approve/internal/step/service"
 	"errors"
 	"fmt"
@@ -14,10 +12,19 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+type FinishApproverRepository interface {
+	FinishApprover(tx *sqlx.Tx, approverId int64) error
+}
+
+type CreateResolutionRepository interface {
+	SaveTx(tx *sqlx.Tx, resolution resm.ResolutionEntity) (int64, error)
+	ApprovingInfoTx(tx *sqlx.Tx, approverId int64) (resm.ApprovingInfoEntity, error)
+}
+
 type CreateResolution struct {
 	transaction    cfg.Transaction
-	approverRepo   ar.ApproverRepository
-	resolutionRepo resr.ResolutionRepository
+	approverRepo   FinishApproverRepository
+	resolutionRepo CreateResolutionRepository
 	processAnyOf   ss.ProcessAnyOfStep
 	processAllOf   ss.ProcessAllOffStep
 }

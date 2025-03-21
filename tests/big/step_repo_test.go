@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	stepRepo sr.StepRepository
+	stepRepo *sr.StepRepository
 )
 
 func TestStepRepository(t *testing.T) {

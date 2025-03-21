@@ -2,11 +2,14 @@ package service
 
 import (
 	sm "approve/internal/step/model"
-	sr "approve/internal/step/repository"
 )
 
+type CreateStepRepository interface {
+	Save(step sm.StepEntity) (int64, error)
+}
+
 type CreateStepTemplate struct {
-	stepRepo sr.StepRepository
+	stepRepo CreateStepRepository
 }
 
 func (svc *CreateStepTemplate) Execute(

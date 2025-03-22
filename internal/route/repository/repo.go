@@ -29,8 +29,8 @@ func StartRoute(
 	return err
 }
 
-func Update(route rm.RouteEntity) (int64, error) {
-	_, err := cfg.DB.NamedExec(
+func Update(tx *sqlx.Tx, route rm.RouteEntity) (int64, error) {
+	_, err := tx.NamedExec(
 		`update route 
      set 
        name = :name,
@@ -41,8 +41,8 @@ func Update(route rm.RouteEntity) (int64, error) {
 	return route.Id, err
 }
 
-func IsRouteStarted(routeId int64) (res bool, err error) {
-	err = cfg.DB.Get(
+func IsRouteStarted(tx *sqlx.Tx, routeId int64) (res bool, err error) {
+	err = tx.Get(
 		&res,
 		`select exists (select 1 
                     from route
@@ -70,8 +70,13 @@ func FinishRoute(
 	return err
 }
 
-func GetById(id int64) (res rm.RouteEntity, err error) {
+func FindById(id int64) (res rm.RouteEntity, err error) {
 	err = cfg.DB.Get(&res, "select * from route where id = $1", id)
+	return res, err
+}
+
+func FindByIdTx(tx *sqlx.Tx, id int64) (res rm.RouteEntity, err error) {
+	err = tx.Get(&res, "select * from route where id = $1", id)
 	return res, err
 }
 

@@ -43,7 +43,7 @@ func TestRouteRepository(t *testing.T) {
 	t.Run("get route by id", func(t *testing.T) {
 		want := setup()
 
-		got, err := routeRepo.GetById(want.Id)
+		got, err := routeRepo.FindById(want.Id)
 
 		a.Nil(err)
 		a.NotEmpty(got.Id)
@@ -62,7 +62,7 @@ func TestRouteRepository(t *testing.T) {
 		defer func() { _ = tx.Rollback() }()
 		a.Nil(routeRepo.StartRoute(tx, want.Id))
 		_ = tx.Commit()
-		got, err := routeRepo.GetById(want.Id)
+		got, err := routeRepo.FindById(want.Id)
 
 		a.Nil(err)
 		a.Equal(want.Id, got.Id)
@@ -83,9 +83,12 @@ func TestRouteRepository(t *testing.T) {
 			IsApproved:  true,
 		}
 
-		_, err := routeRepo.Update(toUpdate)
+		tx := cfg.DB.MustBegin()
+		defer func() { _ = tx.Rollback() }()
+		_, err := routeRepo.Update(tx, toUpdate)
 		a.Nil(err)
-		got, err := routeRepo.GetById(want.Id)
+		a.Nil(tx.Commit())
+		got, err := routeRepo.FindById(want.Id)
 
 		a.Nil(err)
 		a.Equal(want.Id, got.Id)
@@ -99,7 +102,11 @@ func TestRouteRepository(t *testing.T) {
 	t.Run("is route started (false)", func(t *testing.T) {
 		route := setup()
 
-		got, err := routeRepo.IsRouteStarted(route.Id)
+		tx := cfg.DB.MustBegin()
+		defer func() { _ = tx.Rollback() }()
+		got, err := routeRepo.IsRouteStarted(tx, route.Id)
+		a.Nil(err)
+		a.Nil(tx.Commit())
 
 		a.Nil(err)
 		a.False(got)
@@ -111,9 +118,10 @@ func TestRouteRepository(t *testing.T) {
 		tx := cfg.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
 		a.Nil(routeRepo.StartRoute(tx, route.Id))
-		_ = tx.Commit()
 
-		got, err := routeRepo.IsRouteStarted(route.Id)
+		got, err := routeRepo.IsRouteStarted(tx, route.Id)
+		a.Nil(err)
+		a.Nil(tx.Commit())
 
 		a.Nil(err)
 		a.True(got)
@@ -125,8 +133,8 @@ func TestRouteRepository(t *testing.T) {
 		tx := cfg.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
 		a.Nil(routeRepo.StartRoute(tx, want.Id))
-		_ = tx.Commit()
-		isStarted, _ := routeRepo.IsRouteStarted(want.Id)
+		isStarted, _ := routeRepo.IsRouteStarted(tx, want.Id)
+		a.Nil(tx.Commit())
 
 		a.True(isStarted)
 
@@ -134,7 +142,7 @@ func TestRouteRepository(t *testing.T) {
 		defer func() { _ = tx.Rollback() }()
 		a.Nil(routeRepo.FinishRoute(tx, want.Id, true))
 		_ = tx.Commit()
-		got, err := routeRepo.GetById(want.Id)
+		got, err := routeRepo.FindById(want.Id)
 
 		a.Nil(err)
 		a.Equal(want.Id, got.Id)
@@ -150,8 +158,8 @@ func TestRouteRepository(t *testing.T) {
 		tx := cfg.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
 		a.Nil(routeRepo.StartRoute(tx, want.Id))
-		_ = tx.Commit()
-		isStarted, _ := routeRepo.IsRouteStarted(want.Id)
+		isStarted, _ := routeRepo.IsRouteStarted(tx, want.Id)
+		a.Nil(tx.Commit())
 
 		a.True(isStarted)
 
@@ -159,7 +167,7 @@ func TestRouteRepository(t *testing.T) {
 		defer func() { _ = tx.Rollback() }()
 		a.Nil(routeRepo.FinishRoute(tx, want.Id, false))
 		_ = tx.Commit()
-		got, err := routeRepo.GetById(want.Id)
+		got, err := routeRepo.FindById(want.Id)
 
 		a.Nil(err)
 		a.Equal(want.Id, got.Id)

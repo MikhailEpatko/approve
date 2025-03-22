@@ -9,8 +9,15 @@ import (
 	stepRepo "approve/internal/step/repository"
 	gm "approve/internal/stepgroup/model"
 	stepGroupRepo "approve/internal/stepgroup/repository"
+	"errors"
 	"fmt"
 	"github.com/jmoiron/sqlx"
+)
+
+var (
+	ErrRouteNotFound       = errors.New("route not found")
+	ErrRouteAlreadyStarted = errors.New("route is already started")
+	ErrRouteIsFinished     = errors.New("route is finished")
 )
 
 func StartRoute(routeId int64) (err error) {
@@ -23,18 +30,32 @@ func StartRoute(routeId int64) (err error) {
 			err = tx.Commit()
 		}
 	}()
+	err = cm.SafeExecute(err, func() error {
+		route, innerErr := routeRepo.FindByIdTx(tx, routeId)
+		switch {
+		case innerErr != nil:
+			return innerErr
+		case route.Id == 0:
+			return ErrRouteNotFound
+		case route.Status == cm.FINISHED:
+			return ErrRouteIsFinished
+		case route.Status == cm.STARTED:
+			return ErrRouteAlreadyStarted
+		}
+		return nil
+	})
 	return cm.SafeExecute(err, func() error { return startRote(tx, routeId) })
 }
 
 func startRote(
 	tx *sqlx.Tx,
 	routeId int64,
-) error {
-	err := routeRepo.StartRoute(tx, routeId)
-	return cm.SafeExecute(err, func() error { return stargGroups(tx, routeId) })
+) (err error) {
+	err = routeRepo.StartRoute(tx, routeId)
+	return cm.SafeExecute(err, func() error { return startGroups(tx, routeId) })
 }
 
-func stargGroups(
+func startGroups(
 	tx *sqlx.Tx,
 	routeId int64,
 ) error {

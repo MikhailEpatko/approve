@@ -2,15 +2,35 @@ package service
 
 import (
 	cm "approve/internal/common"
+	cfg "approve/internal/config"
 	rm "approve/internal/route/model"
-	"approve/internal/route/repository"
+	routeRepo "approve/internal/route/repository"
 	"fmt"
 )
 
 func UpdateRoute(request rm.UpdateRouteRequest) (routeId int64, err error) {
-	isRouteStarted, err := repository.IsRouteStarted(request.Id)
-	if err == nil && isRouteStarted {
-		err = fmt.Errorf("route was started and cannot be updated")
-	}
-	return cm.SafeExecuteG(err, func() (int64, error) { return repository.Update(request.ToEntity()) })
+	tx, err := cfg.DB.Beginx()
+	defer func() {
+		if err != nil {
+			txErr := tx.Rollback()
+			err = fmt.Errorf("failed updating route: %w, %w", err, txErr)
+		} else {
+			err = tx.Commit()
+		}
+	}()
+	err = cm.SafeExecute(err, func() error {
+		route, innerErr := routeRepo.FindByIdTx(tx, routeId)
+		switch {
+		case innerErr != nil:
+			return innerErr
+		case route.Id == 0:
+			return ErrRouteNotFound
+		case route.Status == cm.FINISHED:
+			return ErrRouteIsFinished
+		case route.Status == cm.STARTED:
+			return ErrRouteAlreadyStarted
+		}
+		return nil
+	})
+	return cm.SafeExecuteG(err, func() (int64, error) { return routeRepo.Update(tx, request.ToEntity()) })
 }

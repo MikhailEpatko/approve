@@ -1,27 +1,20 @@
 package repository
 
 import (
+	cfg "approve/internal/config"
 	resm "approve/internal/resolution/model"
 
 	"github.com/jmoiron/sqlx"
 )
 
-type ResolutionRepository struct {
-	db *sqlx.DB
-}
-
-func NewResolutionRepository(db *sqlx.DB) *ResolutionRepository {
-	return &ResolutionRepository{db}
-}
-
-func (r *ResolutionRepository) FindByApproverId(id int64) ([]resm.ResolutionEntity, error) {
+func FindByApproverId(id int64) ([]resm.ResolutionEntity, error) {
 	var resolutions []resm.ResolutionEntity
-	err := r.db.Select(&resolutions, "select * from resolution where approver_id = $1", id)
+	err := cfg.DB.Select(&resolutions, "select * from resolution where approver_id = $1", id)
 	return resolutions, err
 }
 
-func (r *ResolutionRepository) Save(resolution resm.ResolutionEntity) (resolutionId int64, err error) {
-	err = r.db.Get(
+func Save(resolution resm.ResolutionEntity) (resolutionId int64, err error) {
+	err = cfg.DB.Get(
 		&resolutionId,
 		`insert into resolution (approver_id, is_approved, comment)
      values ($1, $2, $3)
@@ -33,7 +26,7 @@ func (r *ResolutionRepository) Save(resolution resm.ResolutionEntity) (resolutio
 	return resolutionId, err
 }
 
-func (r *ResolutionRepository) SaveTx(
+func SaveTx(
 	tx *sqlx.Tx,
 	resolution resm.ResolutionEntity,
 ) (resolutionId int64, err error) {
@@ -49,7 +42,7 @@ func (r *ResolutionRepository) SaveTx(
 	return resolutionId, err
 }
 
-func (r *ResolutionRepository) ApprovingInfoTx(
+func ApprovingInfoTx(
 	tx *sqlx.Tx,
 	approverId int64,
 ) (res resm.ApprovingInfoEntity, err error) {

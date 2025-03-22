@@ -2,22 +2,15 @@ package repository
 
 import (
 	"approve/internal/common"
+	cfg "approve/internal/config"
 	sm "approve/internal/step/model"
 	gm "approve/internal/stepgroup/model"
 
 	"github.com/jmoiron/sqlx"
 )
 
-type StepRepository struct {
-	db *sqlx.DB
-}
-
-func NewStepRepository(db *sqlx.DB) *StepRepository {
-	return &StepRepository{db}
-}
-
-func (r *StepRepository) FindById(stepId int64) (step sm.StepEntity, err error) {
-	err = r.db.Get(
+func FindById(stepId int64) (step sm.StepEntity, err error) {
+	err = cfg.DB.Get(
 		&step,
 		`select * from step where id = $1`,
 		stepId,
@@ -25,14 +18,14 @@ func (r *StepRepository) FindById(stepId int64) (step sm.StepEntity, err error) 
 	return step, err
 }
 
-func (r *StepRepository) FindByGroupId(id int64) ([]sm.StepEntity, error) {
+func FindByGroupId(id int64) ([]sm.StepEntity, error) {
 	var steps []sm.StepEntity
-	err := r.db.Select(&steps, "select * from step where step_group_id = $1", id)
+	err := cfg.DB.Select(&steps, "select * from step where step_group_id = $1", id)
 	return steps, err
 }
 
-func (r *StepRepository) Save(step sm.StepEntity) (id int64, err error) {
-	err = r.db.Get(
+func Save(step sm.StepEntity) (id int64, err error) {
+	err = cfg.DB.Get(
 		&id,
 		`insert into step (step_group_id, name, number, status, approver_order, is_approved)
      values ($1, $2, $3, $4, $5, $6) returning id`,
@@ -46,7 +39,7 @@ func (r *StepRepository) Save(step sm.StepEntity) (id int64, err error) {
 	return id, err
 }
 
-func (r *StepRepository) StartSteps(
+func StartSteps(
 	tx *sqlx.Tx,
 	group gm.StepGroupEntity,
 ) ([]sm.StepEntity, error) {
@@ -69,8 +62,8 @@ func (r *StepRepository) StartSteps(
 	return saved, err
 }
 
-func (r *StepRepository) Update(step sm.StepEntity) (stepId int64, err error) {
-	_, err = r.db.NamedExec(
+func Update(step sm.StepEntity) (stepId int64, err error) {
+	_, err = cfg.DB.NamedExec(
 		`update step 
      set name = :name,
        number = :number,
@@ -84,8 +77,8 @@ func (r *StepRepository) Update(step sm.StepEntity) (stepId int64, err error) {
 	return stepId, err
 }
 
-func (r *StepRepository) IsRouteStarted(stepId int64) (res bool, err error) {
-	err = r.db.Get(
+func IsRouteStarted(stepId int64) (res bool, err error) {
+	err = cfg.DB.Get(
 		&res,
 		`select exists (
        select 1 from step s 
@@ -97,7 +90,7 @@ func (r *StepRepository) IsRouteStarted(stepId int64) (res bool, err error) {
 	return res, err
 }
 
-func (r *StepRepository) FinishStep(
+func FinishStep(
 	tx *sqlx.Tx,
 	stepId int64,
 ) error {
@@ -105,7 +98,7 @@ func (r *StepRepository) FinishStep(
 	return err
 }
 
-func (r *StepRepository) CalculateAndSetIsApproved(
+func CalculateAndSetIsApproved(
 	tx *sqlx.Tx,
 	stepId int64,
 	approverOrder common.OrderType,
@@ -136,7 +129,7 @@ func (r *StepRepository) CalculateAndSetIsApproved(
 	return res, err
 }
 
-func (r *StepRepository) ExistsNotFinishedStepsInGroup(
+func ExistsNotFinishedStepsInGroup(
 	tx *sqlx.Tx,
 	stepGroupId int64,
 ) (res bool, err error) {
@@ -148,7 +141,7 @@ func (r *StepRepository) ExistsNotFinishedStepsInGroup(
 	return res, err
 }
 
-func (r *StepRepository) StartNextStep(
+func StartNextStep(
 	tx *sqlx.Tx,
 	stepGroupId int64,
 	stepId int64,

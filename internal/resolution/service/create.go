@@ -1,9 +1,11 @@
 package service
 
 import (
+	approverRepo "approve/internal/approver/repository"
 	cm "approve/internal/common"
 	cfg "approve/internal/config"
 	resm "approve/internal/resolution/model"
+	resolutionRepo "approve/internal/resolution/repository"
 	ss "approve/internal/step/service"
 	"errors"
 	"fmt"
@@ -11,23 +13,6 @@ import (
 
 	"github.com/jmoiron/sqlx"
 )
-
-type FinishApproverRepository interface {
-	FinishApprover(tx *sqlx.Tx, approverId int64) error
-}
-
-type CreateResolutionRepository interface {
-	SaveTx(tx *sqlx.Tx, resolution resm.ResolutionEntity) (int64, error)
-	ApprovingInfoTx(tx *sqlx.Tx, approverId int64) (resm.ApprovingInfoEntity, error)
-}
-
-type CreateResolution struct {
-	transaction    cfg.Transaction
-	approverRepo   FinishApproverRepository
-	resolutionRepo CreateResolutionRepository
-	processAnyOf   ss.ProcessAnyOfStep
-	processAllOf   ss.ProcessAllOffStep
-}
 
 var (
 	ErrInvalidApproverOrder    = errors.New("invalid approver order")
@@ -37,10 +22,10 @@ var (
 	ErrStepIsNotStarted        = errors.New("step is not started")
 )
 
-func (svc *CreateResolution) CreateResolution(
+func CreateResolution(
 	request resm.CreateResolutionRequest,
 ) (resolutionId int64, err error) {
-	tx, err := svc.transaction.Begin()
+	tx, err := cfg.DB.Beginx()
 	defer func() {
 		if err != nil {
 			txErr := tx.Rollback()
@@ -50,18 +35,18 @@ func (svc *CreateResolution) CreateResolution(
 		}
 	}()
 	info, err := cm.SafeExecuteG(err, func() (resm.ApprovingInfoEntity, error) {
-		return svc.validateRequest(tx, request)
+		return validateRequest(tx, request)
 	})
 	resolutionId, err = cm.SafeExecuteG(err, func() (int64, error) {
-		return svc.resolutionRepo.SaveTx(tx, request.ToEntity())
+		return resolutionRepo.SaveTx(tx, request.ToEntity())
 	})
-	err = cm.SafeExecute(err, func() error { return svc.approverRepo.FinishApprover(tx, request.ApproverId) })
+	err = cm.SafeExecute(err, func() error { return approverRepo.FinishApprover(tx, request.ApproverId) })
 	if err == nil {
 		switch info.ApproverOrder {
 		case cm.PARALLEL_ALL_OF, cm.SERIAL:
-			err = svc.processAllOf.Execute(tx, info, request.IsApproved)
+			err = ss.ProcessAllOfStep(tx, info, request.IsApproved)
 		case cm.PARALLEL_ANY_OF:
-			err = svc.processAnyOf.Execute(tx, info, request.IsApproved)
+			err = ss.ProcessAnyOfStep(tx, info, request.IsApproved)
 		default:
 			err = ErrInvalidApproverOrder
 		}
@@ -69,7 +54,7 @@ func (svc *CreateResolution) CreateResolution(
 	return resolutionId, cm.ErrorOrNil("can't create resolution", err)
 }
 
-func (svc *CreateResolution) validateRequest(
+func validateRequest(
 	tx *sqlx.Tx,
 	request resm.CreateResolutionRequest,
 ) (info resm.ApprovingInfoEntity, err error) {
@@ -77,7 +62,7 @@ func (svc *CreateResolution) validateRequest(
 	if !request.IsApproved && strings.TrimSpace(request.Comment) == "" {
 		return info, ErrCommentShouldBeProvided
 	}
-	info, err = svc.resolutionRepo.ApprovingInfoTx(tx, request.ApproverId)
+	info, err = resolutionRepo.ApprovingInfoTx(tx, request.ApproverId)
 	switch {
 	case err != nil:
 		break

@@ -2,18 +2,11 @@ package service
 
 import (
 	sm "approve/internal/step/model"
+	stepRepo "approve/internal/step/repository"
 )
 
-type CreateStepRepository interface {
-	Save(step sm.StepEntity) (int64, error)
-}
-
-type CreateStepTemplate struct {
-	stepRepo CreateStepRepository
-}
-
-func (svc *CreateStepTemplate) Execute(
+func CreateStepTemplate(
 	request sm.CreateStepRequest,
 ) (int64, error) {
-	return svc.stepRepo.Save(request.ToEntity())
+	return stepRepo.Save(request.ToEntity())
 }

@@ -2,31 +2,23 @@ package big
 
 import (
 	am "approve/internal/approver/model"
-	ar "approve/internal/approver/repository"
+	approverRepo "approve/internal/approver/repository"
 	cm "approve/internal/common"
-	conf "approve/internal/config"
-	"approve/tests/big/fixtures"
+	cfg "approve/internal/config"
+	fx "approve/tests/big/fixtures"
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	approverRepo *ar.ApproverRepository
-)
-
 func TestApproverRepository(t *testing.T) {
 	a := assert.New(t)
-	cfg := conf.NewAppConfig()
-	db, err := conf.NewDB(cfg)
-	a.Nil(err)
-	fx := fixtures.New(db)
-	approverRepo = ar.NewApproverRepository(db)
+	appCfg := cfg.NewAppConfig()
+	cfg.ConnectDatabase(appCfg)
 	deleteRoute := func() {
-		db.MustExec("delete from route")
+		cfg.DB.MustExec("delete from route")
 	}
-
 	defer func() {
 		if r := recover(); r != nil {
 			cm.Logger.Fatal(fmt.Sprintf("Recovered from panic: %s", r))
@@ -58,7 +50,7 @@ func TestApproverRepository(t *testing.T) {
 		approver1 := fx.Approver(step, 1, cm.NEW)
 		approver2 := fx.Approver(step, 2, cm.NEW)
 
-		tx := db.MustBegin()
+		tx := cfg.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
 		a.Nil(approverRepo.StartStepApprovers(tx, step))
 		a.Nil(tx.Commit())
@@ -81,7 +73,7 @@ func TestApproverRepository(t *testing.T) {
 			approver1 := fx.Approver(step, 1, cm.NEW)
 			approver2 := fx.Approver(step, 2, cm.NEW)
 
-			tx := db.MustBegin()
+			tx := cfg.DB.MustBegin()
 			defer func() { _ = tx.Rollback() }()
 			a.Nil(approverRepo.StartStepApprovers(tx, step))
 			a.Nil(tx.Commit())
@@ -138,7 +130,7 @@ func TestApproverRepository(t *testing.T) {
 		step := fx.Step(group, 1, cm.STARTED, cm.SERIAL, false)
 		approver := fx.Approver(step, 1, cm.STARTED)
 
-		tx := db.MustBegin()
+		tx := cfg.DB.MustBegin()
 		a.Nil(approverRepo.FinishApprover(tx, approver.Id))
 		a.Nil(tx.Commit())
 
@@ -156,7 +148,7 @@ func TestApproverRepository(t *testing.T) {
 		_ = fx.Approver(step, 1, cm.FINISHED)
 		_ = fx.Approver(step, 2, cm.STARTED)
 
-		tx := db.MustBegin()
+		tx := cfg.DB.MustBegin()
 		res, err := approverRepo.ExistNotFinishedApproversInStep(tx, step.Id)
 		a.Nil(err)
 		a.True(res)
@@ -171,7 +163,7 @@ func TestApproverRepository(t *testing.T) {
 		_ = fx.Approver(step, 1, cm.FINISHED)
 		_ = fx.Approver(step, 2, cm.FINISHED)
 
-		tx := db.MustBegin()
+		tx := cfg.DB.MustBegin()
 		res, err := approverRepo.ExistNotFinishedApproversInStep(tx, step.Id)
 		a.Nil(err)
 		a.False(res)
@@ -186,7 +178,7 @@ func TestApproverRepository(t *testing.T) {
 		approver1 := fx.Approver(step, 1, cm.FINISHED)
 		approver2 := fx.Approver(step, 2, cm.NEW)
 
-		tx := db.MustBegin()
+		tx := cfg.DB.MustBegin()
 		err := approverRepo.StartNextApprover(tx, step.Id, approver1.Id)
 		a.Nil(err)
 		a.Nil(tx.Commit())

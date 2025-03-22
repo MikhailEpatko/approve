@@ -2,31 +2,24 @@ package repository
 
 import (
 	am "approve/internal/approver/model"
+	cfg "approve/internal/config"
 	sm "approve/internal/step/model"
 	"github.com/jmoiron/sqlx"
 )
 
-type ApproverRepository struct {
-	db *sqlx.DB
-}
-
-func NewApproverRepository(db *sqlx.DB) *ApproverRepository {
-	return &ApproverRepository{db}
-}
-
-func (r *ApproverRepository) FindById(approverId int64) (approver am.ApproverEntity, err error) {
-	err = r.db.Get(&approver, "select * from approver where id = $1", approverId)
+func FindById(approverId int64) (approver am.ApproverEntity, err error) {
+	err = cfg.DB.Get(&approver, "select * from approver where id = $1", approverId)
 	return approver, err
 }
 
-func (r *ApproverRepository) FindByStepId(stepId int64) ([]am.ApproverEntity, error) {
+func FindByStepId(stepId int64) ([]am.ApproverEntity, error) {
 	var approvers []am.ApproverEntity
-	err := r.db.Select(&approvers, "select * from approver where step_id = $1", stepId)
+	err := cfg.DB.Select(&approvers, "select * from approver where step_id = $1", stepId)
 	return approvers, err
 }
 
-func (r *ApproverRepository) Save(approver am.ApproverEntity) (id int64, err error) {
-	err = r.db.Get(
+func Save(approver am.ApproverEntity) (id int64, err error) {
+	err = cfg.DB.Get(
 		&id,
 		`insert into approver (step_id, guid, name, position, email, number, status)
      values ($1, $2, $3, $4, $5, $6, $7) returning id`,
@@ -41,7 +34,7 @@ func (r *ApproverRepository) Save(approver am.ApproverEntity) (id int64, err err
 	return id, err
 }
 
-func (r *ApproverRepository) StartStepApprovers(
+func StartStepApprovers(
 	tx *sqlx.Tx,
 	step sm.StepEntity,
 ) error {
@@ -55,8 +48,8 @@ func (r *ApproverRepository) StartStepApprovers(
 	return err
 }
 
-func (r *ApproverRepository) Update(approver am.ApproverEntity) (approverId int64, err error) {
-	_, err = r.db.NamedExec(
+func Update(approver am.ApproverEntity) (approverId int64, err error) {
+	_, err = cfg.DB.NamedExec(
 		`update approver 
      set name = :name,
        guid = :guid,
@@ -69,7 +62,7 @@ func (r *ApproverRepository) Update(approver am.ApproverEntity) (approverId int6
 	return approver.Id, err
 }
 
-func (r *ApproverRepository) FinishApprover(
+func FinishApprover(
 	tx *sqlx.Tx,
 	approverId int64,
 ) error {
@@ -77,7 +70,7 @@ func (r *ApproverRepository) FinishApprover(
 	return err
 }
 
-func (r *ApproverRepository) FinishStepApprovers(
+func FinishStepApprovers(
 	tx *sqlx.Tx,
 	stepId int64,
 ) error {
@@ -90,7 +83,7 @@ func (r *ApproverRepository) FinishStepApprovers(
 	return err
 }
 
-func (r *ApproverRepository) ExistNotFinishedApproversInStep(
+func ExistNotFinishedApproversInStep(
 	tx *sqlx.Tx,
 	stepId int64,
 ) (res bool, err error) {
@@ -102,7 +95,7 @@ func (r *ApproverRepository) ExistNotFinishedApproversInStep(
 	return res, err
 }
 
-func (r *ApproverRepository) StartNextApprover(
+func StartNextApprover(
 	tx *sqlx.Tx,
 	stepId int64,
 	approverId int64,
@@ -118,8 +111,8 @@ func (r *ApproverRepository) StartNextApprover(
 	return err
 }
 
-func (a *ApproverRepository) IsRouteStarted(routeId int64) (res bool, err error) {
-	err = a.db.Get(
+func IsRouteStarted(approverId int64) (res bool, err error) {
+	err = cfg.DB.Get(
 		&res,
 		`select exists (select 1 
                     from route r
@@ -128,7 +121,7 @@ func (a *ApproverRepository) IsRouteStarted(routeId int64) (res bool, err error)
                     inner join approver a on s.id = a.step_id
                     where a.id = $1 
                     and r.status = 'STARTED')`,
-		routeId,
+		approverId,
 	)
 	return res, err
 }

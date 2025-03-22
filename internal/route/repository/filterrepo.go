@@ -1,22 +1,18 @@
 package repository
 
 import (
+	cfg "approve/internal/config"
 	rm "approve/internal/route/model"
-	"github.com/jmoiron/sqlx"
 	"strings"
 )
 
-func NewFindByFilterRouteRepository(db *sqlx.DB) *RouteRepository {
-	return &RouteRepository{db}
-}
-
 type parameters map[string]any
 
-func (r *RouteRepository) FindByfilter(filter rm.FilterRouteRequest) ([]rm.RouteEntity, int64, error) {
+func FindByfilter(filter rm.FilterRouteRequest) ([]rm.RouteEntity, int64, error) {
 	var routes []rm.RouteEntity
 	var total int64
 	query, params := countByFilterQueryAndParams(filter)
-	rows, err := r.db.NamedQuery(query, params)
+	rows, err := cfg.DB.NamedQuery(query, params)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -30,7 +26,7 @@ func (r *RouteRepository) FindByfilter(filter rm.FilterRouteRequest) ([]rm.Route
 		return routes, 0, nil
 	}
 	query, params = findByFilterQueryAndParams(filter)
-	rows, err = r.db.NamedQuery(query, params)
+	rows, err = cfg.DB.NamedQuery(query, params)
 	if err != nil {
 		return nil, 0, err
 	}

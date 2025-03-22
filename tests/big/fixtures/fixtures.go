@@ -2,39 +2,20 @@ package fixtures
 
 import (
 	am "approve/internal/approver/model"
-	ar "approve/internal/approver/repository"
+	approverRepo "approve/internal/approver/repository"
 	cm "approve/internal/common"
 	resm "approve/internal/resolution/model"
-	resr "approve/internal/resolution/repository"
+	resolutionRepo "approve/internal/resolution/repository"
 	rm "approve/internal/route/model"
-	rr "approve/internal/route/repository"
+	routeRepo "approve/internal/route/repository"
 	sm "approve/internal/step/model"
-	sr "approve/internal/step/repository"
+	stepRepo "approve/internal/step/repository"
 	gm "approve/internal/stepgroup/model"
-	gr "approve/internal/stepgroup/repository"
+	stepGroupRepo "approve/internal/stepgroup/repository"
 	"fmt"
-	"github.com/jmoiron/sqlx"
 )
 
-type Fixtures struct {
-	routeRepo      *rr.RouteRepository
-	stepGroupRepo  *gr.StepGroupRepository
-	stepRepo       *sr.StepRepository
-	approverRepo   *ar.ApproverRepository
-	resolutionRepo *resr.ResolutionRepository
-}
-
-func New(db *sqlx.DB) Fixtures {
-	return Fixtures{
-		routeRepo:      rr.NewRouteRepository(db),
-		stepGroupRepo:  gr.NewStepGroupRepository(db),
-		stepRepo:       sr.NewStepRepository(db),
-		approverRepo:   ar.NewApproverRepository(db),
-		resolutionRepo: resr.NewResolutionRepository(db),
-	}
-}
-
-func (fx *Fixtures) Route(
+func Route(
 	name string,
 	routeStatus cm.Status,
 ) rm.RouteEntity {
@@ -44,7 +25,7 @@ func (fx *Fixtures) Route(
 		Status:      routeStatus,
 		IsApproved:  false,
 	}
-	id, err := fx.routeRepo.Save(route)
+	id, err := routeRepo.Save(route)
 	if err != nil {
 		panic(err)
 	}
@@ -52,7 +33,7 @@ func (fx *Fixtures) Route(
 	return route
 }
 
-func (fx *Fixtures) Group(
+func Group(
 	route rm.RouteEntity,
 	number int,
 	groupStatus cm.Status,
@@ -67,7 +48,7 @@ func (fx *Fixtures) Group(
 		StepOrder:  stepOrder,
 		IsApproved: isApproved,
 	}
-	id, err := fx.stepGroupRepo.Save(group)
+	id, err := stepGroupRepo.Save(group)
 	if err != nil {
 		panic(err)
 	}
@@ -75,7 +56,7 @@ func (fx *Fixtures) Group(
 	return group
 }
 
-func (fx *Fixtures) Step(
+func Step(
 	group gm.StepGroupEntity,
 	number int,
 	orderStatus cm.Status,
@@ -90,7 +71,7 @@ func (fx *Fixtures) Step(
 		ApproverOrder: approverOrder,
 		IsApproved:    isApproved,
 	}
-	id, err := fx.stepRepo.Save(step)
+	id, err := stepRepo.Save(step)
 	if err != nil {
 		panic(err)
 	}
@@ -98,7 +79,7 @@ func (fx *Fixtures) Step(
 	return step
 }
 
-func (fx *Fixtures) Approver(
+func Approver(
 	step sm.StepEntity,
 	number int,
 	status cm.Status,
@@ -112,7 +93,7 @@ func (fx *Fixtures) Approver(
 		Number:   number,
 		Status:   status,
 	}
-	id, err := fx.approverRepo.Save(approver)
+	id, err := approverRepo.Save(approver)
 	if err != nil {
 		panic(err)
 	}
@@ -120,7 +101,7 @@ func (fx *Fixtures) Approver(
 	return approver
 }
 
-func (fx *Fixtures) Resolution(
+func Resolution(
 	approver am.ApproverEntity,
 	isApproved bool,
 ) resm.ResolutionEntity {
@@ -129,7 +110,7 @@ func (fx *Fixtures) Resolution(
 		IsApproved: isApproved,
 		Comment:    "comment",
 	}
-	id, err := fx.resolutionRepo.Save(resolution)
+	id, err := resolutionRepo.Save(resolution)
 	if err != nil {
 		panic(err)
 	}

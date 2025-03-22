@@ -2,18 +2,11 @@ package service
 
 import (
 	am "approve/internal/approver/model"
+	approverRepo "approve/internal/approver/repository"
 )
 
-type SaveApproverRepository interface {
-	Save(approver am.ApproverEntity) (int64, error)
-}
-
-type CreateApproverTemplate struct {
-	approverRepo SaveApproverRepository
-}
-
-func (svc *CreateApproverTemplate) Execute(
+func CreateApproverTemplate(
 	request am.CreateApproverRequest,
 ) (int64, error) {
-	return svc.approverRepo.Save(request.ToEntity())
+	return approverRepo.Save(request.ToEntity())
 }

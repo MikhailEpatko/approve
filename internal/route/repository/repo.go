@@ -1,23 +1,16 @@
 package repository
 
 import (
+	cfg "approve/internal/config"
 	rm "approve/internal/route/model"
 
 	"github.com/jmoiron/sqlx"
 )
 
-type RouteRepository struct {
-	db *sqlx.DB
-}
-
-func NewRouteRepository(db *sqlx.DB) *RouteRepository {
-	return &RouteRepository{db}
-}
-
-func (r *RouteRepository) Save(
+func Save(
 	route rm.RouteEntity,
 ) (res int64, err error) {
-	err = r.db.Get(
+	err = cfg.DB.Get(
 		&res,
 		"insert into route (name, description, status, is_approved) values ($1, $2, $3, $4) returning id",
 		route.Name,
@@ -28,7 +21,7 @@ func (r *RouteRepository) Save(
 	return res, err
 }
 
-func (r *RouteRepository) StartRoute(
+func StartRoute(
 	tx *sqlx.Tx,
 	routeId int64,
 ) error {
@@ -36,8 +29,8 @@ func (r *RouteRepository) StartRoute(
 	return err
 }
 
-func (r *RouteRepository) Update(route rm.RouteEntity) (int64, error) {
-	_, err := r.db.NamedExec(
+func Update(route rm.RouteEntity) (int64, error) {
+	_, err := cfg.DB.NamedExec(
 		`update route 
      set 
        name = :name,
@@ -48,8 +41,8 @@ func (r *RouteRepository) Update(route rm.RouteEntity) (int64, error) {
 	return route.Id, err
 }
 
-func (r *RouteRepository) IsRouteStarted(routeId int64) (res bool, err error) {
-	err = r.db.Get(
+func IsRouteStarted(routeId int64) (res bool, err error) {
+	err = cfg.DB.Get(
 		&res,
 		`select exists (select 1 
                     from route
@@ -60,7 +53,7 @@ func (r *RouteRepository) IsRouteStarted(routeId int64) (res bool, err error) {
 	return res, err
 }
 
-func (r *RouteRepository) FinishRoute(
+func FinishRoute(
 	tx *sqlx.Tx,
 	routeId int64,
 	isGroupApproved bool,
@@ -77,12 +70,12 @@ func (r *RouteRepository) FinishRoute(
 	return err
 }
 
-func (r *RouteRepository) GetById(id int64) (res rm.RouteEntity, err error) {
-	err = r.db.Get(&res, "select * from route where id = $1", id)
+func GetById(id int64) (res rm.RouteEntity, err error) {
+	err = cfg.DB.Get(&res, "select * from route where id = $1", id)
 	return res, err
 }
 
-func (r *RouteRepository) DeleteById(routeId int64) error {
-	_, err := r.db.Exec("delete from route where id = $1", routeId)
+func DeleteById(routeId int64) error {
+	_, err := cfg.DB.Exec("delete from route where id = $1", routeId)
 	return err
 }

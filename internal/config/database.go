@@ -1,12 +1,15 @@
 package config
 
 import (
+	"approve/internal/common"
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
 
-func NewDB(cfg *AppConfig) (*sqlx.DB, error) {
+var DB *sqlx.DB
+
+func ConnectDatabase(cfg *AppConfig) {
 	dsn := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		cfg.dbHost,
@@ -16,10 +19,6 @@ func NewDB(cfg *AppConfig) (*sqlx.DB, error) {
 		cfg.dbName,
 		cfg.dbSslMode,
 	)
-	db := sqlx.MustConnect(cfg.dbDriverName, dsn)
-	err := db.Ping()
-	if err != nil {
-		return nil, err
-	}
-	return db, nil
+	DB = sqlx.MustConnect(cfg.dbDriverName, dsn)
+	common.Logger.Info("connected to database")
 }

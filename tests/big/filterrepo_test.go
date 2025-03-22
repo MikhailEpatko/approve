@@ -2,15 +2,15 @@ package big
 
 import (
 	am "approve/internal/approver/model"
-	ar "approve/internal/approver/repository"
+	approverRepo "approve/internal/approver/repository"
 	cm "approve/internal/common"
-	conf "approve/internal/config"
+	cfg "approve/internal/config"
 	rm "approve/internal/route/model"
-	rr "approve/internal/route/repository"
+	routeRepo "approve/internal/route/repository"
 	sm "approve/internal/step/model"
-	sr "approve/internal/step/repository"
+	stepRepo "approve/internal/step/repository"
 	gm "approve/internal/stepgroup/model"
-	gr "approve/internal/stepgroup/repository"
+	stepGroupsRepo "approve/internal/stepgroup/repository"
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -24,29 +24,18 @@ var (
 	description2 = "test route description 2"
 	status2      = cm.STARTED
 	guid         = "guid"
-	routes       *rr.RouteRepository
-	stepGroups   *gr.StepGroupRepository
-	steps        *sr.StepRepository
-	approvers    *ar.ApproverRepository
 )
 
 func TestFindByFilterRouteRepository(t *testing.T) {
 	a := assert.New(t)
-	cfg := conf.NewAppConfig()
-	db, err := conf.NewDB(cfg)
-	a.Nil(err)
-	routes = rr.NewRouteRepository(db)
-	stepGroups = gr.NewStepGroupRepository(db)
-	steps = sr.NewStepRepository(db)
-	approvers = ar.NewApproverRepository(db)
-	findByFilterRepo := rr.NewFindByFilterRouteRepository(db)
+	appCfg := cfg.NewAppConfig()
+	cfg.ConnectDatabase(appCfg)
 	deleteRoutes := func() {
-		db.MustExec("delete from route")
+		cfg.DB.MustExec("delete from route")
 	}
-
 	defer func() {
 		if r := recover(); r != nil {
-			cm.Logger.Fatal(fmt.Sprintf("Recovered from panic: %s", r))
+			cm.Logger.Fatal(fmt.Sprintf("recovered from panic: %s", r))
 			deleteRoutes()
 		}
 	}()
@@ -63,7 +52,7 @@ func TestFindByFilterRouteRepository(t *testing.T) {
 			},
 		}
 
-		got, total, err := findByFilterRepo.FindByfilter(filter)
+		got, total, err := routeRepo.FindByfilter(filter)
 
 		a.Nil(err)
 		a.NotNil(got)
@@ -88,7 +77,7 @@ func TestFindByFilterRouteRepository(t *testing.T) {
 			},
 		}
 
-		got, total, err := findByFilterRepo.FindByfilter(filter)
+		got, total, err := routeRepo.FindByfilter(filter)
 
 		a.Nil(err)
 		a.NotNil(got)
@@ -113,7 +102,7 @@ func TestFindByFilterRouteRepository(t *testing.T) {
 			},
 		}
 
-		got, total, err := findByFilterRepo.FindByfilter(filter)
+		got, total, err := routeRepo.FindByfilter(filter)
 
 		a.Nil(err)
 		a.Nil(got)
@@ -134,7 +123,7 @@ func TestFindByFilterRouteRepository(t *testing.T) {
 			},
 		}
 
-		got, total, err := findByFilterRepo.FindByfilter(filter)
+		got, total, err := routeRepo.FindByfilter(filter)
 
 		a.Nil(err)
 		a.NotNil(got)
@@ -159,7 +148,7 @@ func TestFindByFilterRouteRepository(t *testing.T) {
 			},
 		}
 
-		got, total, err := findByFilterRepo.FindByfilter(filter)
+		got, total, err := routeRepo.FindByfilter(filter)
 
 		a.Nil(err)
 		a.NotNil(got)
@@ -184,7 +173,7 @@ func TestFindByFilterRouteRepository(t *testing.T) {
 			},
 		}
 
-		got, total, err := findByFilterRepo.FindByfilter(filter)
+		got, total, err := routeRepo.FindByfilter(filter)
 
 		a.Nil(err)
 		a.NotNil(got)
@@ -205,7 +194,7 @@ func createRoutes() {
 		Description: description1,
 		Status:      status1,
 	}
-	route1.Id, _ = routes.Save(route1)
+	route1.Id, _ = routeRepo.Save(route1)
 	group11 := gm.StepGroupEntity{
 		RouteId:   route1.Id,
 		Name:      name1 + "-group11",
@@ -213,7 +202,7 @@ func createRoutes() {
 		Status:    status1,
 		StepOrder: cm.SERIAL,
 	}
-	group11.Id, _ = stepGroups.Save(group11)
+	group11.Id, _ = stepGroupsRepo.Save(group11)
 	step111 := sm.StepEntity{
 		StepGroupId:   group11.Id,
 		Name:          group11.Name + "-step111",
@@ -221,7 +210,7 @@ func createRoutes() {
 		Status:        status1,
 		ApproverOrder: cm.SERIAL,
 	}
-	step111.Id, _ = steps.Save(step111)
+	step111.Id, _ = stepRepo.Save(step111)
 	approver1111 := am.ApproverEntity{
 		StepId:   step111.Id,
 		Guid:     guid + "-1111",
@@ -231,7 +220,7 @@ func createRoutes() {
 		Number:   1,
 		Status:   status1,
 	}
-	approver1111.Id, _ = approvers.Save(approver1111)
+	approver1111.Id, _ = approverRepo.Save(approver1111)
 	approver1112 := am.ApproverEntity{
 		StepId:   step111.Id,
 		Guid:     guid + "-1111",
@@ -241,7 +230,7 @@ func createRoutes() {
 		Number:   2,
 		Status:   status1,
 	}
-	approver1112.Id, _ = approvers.Save(approver1112)
+	approver1112.Id, _ = approverRepo.Save(approver1112)
 
 	group12 := gm.StepGroupEntity{
 		RouteId:   route1.Id,
@@ -250,7 +239,7 @@ func createRoutes() {
 		Status:    status1,
 		StepOrder: cm.PARALLEL_ALL_OF,
 	}
-	group12.Id, _ = stepGroups.Save(group12)
+	group12.Id, _ = stepGroupsRepo.Save(group12)
 	step121 := sm.StepEntity{
 		StepGroupId:   group12.Id,
 		Name:          group12.Name + "-step121",
@@ -258,7 +247,7 @@ func createRoutes() {
 		Status:        status1,
 		ApproverOrder: cm.PARALLEL_ALL_OF,
 	}
-	step121.Id, _ = steps.Save(step121)
+	step121.Id, _ = stepRepo.Save(step121)
 	approver1211 := am.ApproverEntity{
 		StepId:   step121.Id,
 		Guid:     guid + "-1211",
@@ -268,14 +257,14 @@ func createRoutes() {
 		Number:   1,
 		Status:   status1,
 	}
-	approver1211.Id, _ = approvers.Save(approver1211)
+	approver1211.Id, _ = approverRepo.Save(approver1211)
 
 	route2 := rm.RouteEntity{
 		Name:        name2,
 		Description: description2,
 		Status:      status2,
 	}
-	route2.Id, _ = routes.Save(route2)
+	route2.Id, _ = routeRepo.Save(route2)
 
 	group21 := gm.StepGroupEntity{
 		RouteId:   route2.Id,
@@ -284,7 +273,7 @@ func createRoutes() {
 		Status:    status2,
 		StepOrder: cm.SERIAL,
 	}
-	group21.Id, _ = stepGroups.Save(group21)
+	group21.Id, _ = stepGroupsRepo.Save(group21)
 	step211 := sm.StepEntity{
 		StepGroupId:   group21.Id,
 		Name:          group21.Name + "-step211",
@@ -292,7 +281,7 @@ func createRoutes() {
 		Status:        status2,
 		ApproverOrder: cm.SERIAL,
 	}
-	step211.Id, _ = steps.Save(step211)
+	step211.Id, _ = stepRepo.Save(step211)
 	approver2111 := am.ApproverEntity{
 		StepId:   step211.Id,
 		Guid:     guid + "-2111",
@@ -302,7 +291,7 @@ func createRoutes() {
 		Number:   1,
 		Status:   status2,
 	}
-	approver2111.Id, _ = approvers.Save(approver2111)
+	approver2111.Id, _ = approverRepo.Save(approver2111)
 
 	group22 := gm.StepGroupEntity{
 		RouteId:   route2.Id,
@@ -311,7 +300,7 @@ func createRoutes() {
 		Status:    status2,
 		StepOrder: cm.PARALLEL_ALL_OF,
 	}
-	group22.Id, _ = stepGroups.Save(group22)
+	group22.Id, _ = stepGroupsRepo.Save(group22)
 	step221 := sm.StepEntity{
 		StepGroupId:   group22.Id,
 		Name:          group22.Name + "-step221",
@@ -319,7 +308,7 @@ func createRoutes() {
 		Status:        status2,
 		ApproverOrder: cm.PARALLEL_ALL_OF,
 	}
-	step221.Id, _ = steps.Save(step211)
+	step221.Id, _ = stepRepo.Save(step211)
 	approver2211 := am.ApproverEntity{
 		StepId:   step221.Id,
 		Guid:     guid + "-2211",
@@ -329,5 +318,5 @@ func createRoutes() {
 		Number:   1,
 		Status:   status2,
 	}
-	approver2211.Id, _ = approvers.Save(approver2211)
+	approver2211.Id, _ = approverRepo.Save(approver2211)
 }

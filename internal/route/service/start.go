@@ -1,40 +1,20 @@
 package service
 
 import (
+	approverRepo "approve/internal/approver/repository"
 	cm "approve/internal/common"
 	cfg "approve/internal/config"
+	routeRepo "approve/internal/route/repository"
 	sm "approve/internal/step/model"
+	stepRepo "approve/internal/step/repository"
 	gm "approve/internal/stepgroup/model"
+	stepGroupRepo "approve/internal/stepgroup/repository"
 	"fmt"
 	"github.com/jmoiron/sqlx"
 )
 
-type StartRouteRepository interface {
-	StartRoute(tx *sqlx.Tx, id int64) error
-}
-
-type StartFirstGroupRepository interface {
-	StartFirstGroup(tx *sqlx.Tx, routeId int64) (gm.StepGroupEntity, error)
-}
-
-type StartStepRepository interface {
-	StartSteps(tx *sqlx.Tx, group gm.StepGroupEntity) ([]sm.StepEntity, error)
-}
-
-type StartApproverRepository interface {
-	StartStepApprovers(tx *sqlx.Tx, step sm.StepEntity) error
-}
-
-type StartRoute struct {
-	transaction   cfg.Transaction
-	routeRepo     StartRouteRepository
-	stepGroupRepo StartFirstGroupRepository
-	stepRepo      StartStepRepository
-	approverRepo  StartApproverRepository
-}
-
-func (svc *StartRoute) Execute(routeId int64) (err error) {
-	tx, err := svc.transaction.Begin()
+func StartRoute(routeId int64) (err error) {
+	tx, err := cfg.DB.Beginx()
 	defer func() {
 		if err != nil {
 			txErr := tx.Rollback()
@@ -43,36 +23,36 @@ func (svc *StartRoute) Execute(routeId int64) (err error) {
 			err = tx.Commit()
 		}
 	}()
-	return cm.SafeExecute(err, func() error { return svc.startRote(tx, routeId) })
+	return cm.SafeExecute(err, func() error { return startRote(tx, routeId) })
 }
 
-func (svc *StartRoute) startRote(
+func startRote(
 	tx *sqlx.Tx,
 	routeId int64,
 ) error {
-	err := svc.routeRepo.StartRoute(tx, routeId)
-	return cm.SafeExecute(err, func() error { return svc.stargGroups(tx, routeId) })
+	err := routeRepo.StartRoute(tx, routeId)
+	return cm.SafeExecute(err, func() error { return stargGroups(tx, routeId) })
 }
 
-func (svc *StartRoute) stargGroups(
+func stargGroups(
 	tx *sqlx.Tx,
 	routeId int64,
 ) error {
-	group, err := svc.stepGroupRepo.StartFirstGroup(tx, routeId)
+	group, err := stepGroupRepo.StartFirstGroup(tx, routeId)
 	if err == nil && group.Id > 0 {
-		err = svc.startSteps(tx, group)
+		err = startSteps(tx, group)
 	}
 	return err
 }
 
-func (svc *StartRoute) startSteps(
+func startSteps(
 	tx *sqlx.Tx,
 	group gm.StepGroupEntity,
 ) error {
-	steps, err := svc.stepRepo.StartSteps(tx, group)
+	steps, err := stepRepo.StartSteps(tx, group)
 	if err == nil && len(steps) > 0 {
 		for _, step := range steps {
-			err = svc.startApprovers(tx, step)
+			err = startApprovers(tx, step)
 			if err != nil {
 				break
 			}
@@ -81,9 +61,9 @@ func (svc *StartRoute) startSteps(
 	return err
 }
 
-func (svc *StartRoute) startApprovers(
+func startApprovers(
 	tx *sqlx.Tx,
 	step sm.StepEntity,
 ) error {
-	return svc.approverRepo.StartStepApprovers(tx, step)
+	return approverRepo.StartStepApprovers(tx, step)
 }

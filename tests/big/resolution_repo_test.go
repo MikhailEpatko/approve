@@ -2,28 +2,21 @@ package big
 
 import (
 	cm "approve/internal/common"
-	conf "approve/internal/config"
-	resr "approve/internal/resolution/repository"
-	"approve/tests/big/fixtures"
+	cfg "approve/internal/config"
+	resolutionRepo "approve/internal/resolution/repository"
+	fx "approve/tests/big/fixtures"
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	resolutionRepo *resr.ResolutionRepository
-)
-
 func TestResolutionRepository(t *testing.T) {
 	a := assert.New(t)
-	cfg := conf.NewAppConfig()
-	db, err := conf.NewDB(cfg)
-	a.Nil(err)
-	fx := fixtures.New(db)
-	resolutionRepo = resr.NewResolutionRepository(db)
+	appCfg := cfg.NewAppConfig()
+	cfg.ConnectDatabase(appCfg)
 	deleteRoute := func() {
-		db.MustExec("delete from route")
+		cfg.DB.MustExec("delete from route")
 	}
 
 	defer func() {
@@ -60,7 +53,7 @@ func TestResolutionRepository(t *testing.T) {
 		step2 := fx.Step(group2, 1, cm.NEW, cm.PARALLEL_ALL_OF, false)
 		_ = fx.Approver(step2, 1, cm.NEW)
 
-		tx := db.MustBegin()
+		tx := cfg.DB.MustBegin()
 		got, err := resolutionRepo.ApprovingInfoTx(tx, approver.Id)
 		a.Nil(tx.Commit())
 

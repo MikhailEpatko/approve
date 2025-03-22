@@ -1,6 +1,8 @@
 package config
 
 import (
+	cm "approve/internal/common"
+	"github.com/joho/godotenv"
 	"os"
 )
 
@@ -15,6 +17,10 @@ type AppConfig struct {
 }
 
 func NewAppConfig() *AppConfig {
+	err := godotenv.Load(".env")
+	if err != nil {
+		cm.Logger.Info("not found .env file")
+	}
 	return &AppConfig{
 		dbDriverName: os.Getenv("DB_DRIVER_NAME"),
 		dbHost:       os.Getenv("DB_HOST"),

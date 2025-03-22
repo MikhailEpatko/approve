@@ -21,9 +21,9 @@ func UpdateRoute(c *fiber.Ctx) {
 
 	routeId, err := svc.UpdateRoute(request)
 	if err != nil {
-		if errors.Is(err, svc.ErrRouteNotFound) == true ||
-			errors.Is(err, svc.ErrRouteAlreadyStarted) == true ||
-			errors.Is(err, svc.ErrRouteIsFinished) == true {
+		if errors.Is(err, svc.ErrRouteNotFound) ||
+			errors.Is(err, svc.ErrRouteAlreadyStarted) ||
+			errors.Is(err, svc.ErrRouteIsFinished) {
 			_ = cm.ErrResponse(c, 400, err.Error())
 		} else {
 			_ = cm.ErrResponse(c, 500, fmt.Sprintf("error updating route: %s", err.Error()))

@@ -1,7 +1,6 @@
 name: Linters
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+  push:
     branches: [ "main" ]
 
 concurrency:

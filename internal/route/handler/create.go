@@ -4,6 +4,7 @@ import (
 	cm "approve/internal/common"
 	"approve/internal/route/model"
 	svc "approve/internal/route/service"
+	"errors"
 	"github.com/gofiber/fiber"
 	"go.uber.org/zap"
 	"strconv"
@@ -19,7 +20,12 @@ func CreateRouteTemplate(c *fiber.Ctx) {
 
 	routeId, err := svc.CreateRouteTemplate(request)
 	if err != nil {
-		_ = cm.ErrResponse(c, 500, err.Error())
+		switch {
+		case errors.As(err, &cm.RequestValidationError{}):
+			_ = cm.ErrResponse(c, 400, err.Error())
+		default:
+			_ = cm.ErrResponse(c, 500, err.Error())
+		}
 		cm.Logger.Error("error creating route template", zap.Error(err))
 		return
 	}

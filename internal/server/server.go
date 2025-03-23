@@ -6,14 +6,16 @@ import (
 	"github.com/gofiber/fiber"
 )
 
-func NewServer() (app *fiber.App, err error) {
+func RegisterRoutes(app *fiber.App) (err error) {
 	appCfg := cfg.NewAppConfig()
 	cfg.ConnectDatabase(appCfg)
-	app = fiber.New()
+	//app = fiber.New()
 	api := app.Group("/api")
 
 	api.Post("/route", routeHandler.CreateRouteTemplate)
 	api.Put("/route", routeHandler.UpdateRoute)
+	api.Put("/route/:routeId", routeHandler.StartRoute)
+	api.Post("/route/by-filter", routeHandler.FindByFilter)
 
-	return app, nil
+	return err
 }

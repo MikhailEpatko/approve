@@ -2,7 +2,7 @@ package big
 
 import (
 	cm "approve/internal/common"
-	cfg "approve/internal/config"
+	cfg "approve/internal/database"
 	sm "approve/internal/step/model"
 	stepRepo "approve/internal/step/repository"
 	fx "approve/tests/big/fixtures"
@@ -13,8 +13,7 @@ import (
 
 func TestStepRepository(t *testing.T) {
 	a := assert.New(t)
-	appCfg := cfg.NewAppConfig()
-	cfg.ConnectDatabase(appCfg)
+	cfg.Connect()
 	deleteRoute := func() {
 		cfg.DB.MustExec("delete from route")
 	}

@@ -4,7 +4,7 @@ import (
 	am "approve/internal/approver/model"
 	approverRepo "approve/internal/approver/repository"
 	cm "approve/internal/common"
-	cfg "approve/internal/config"
+	cfg "approve/internal/database"
 	fx "approve/tests/big/fixtures"
 	"fmt"
 	"testing"
@@ -14,8 +14,7 @@ import (
 
 func TestApproverRepository(t *testing.T) {
 	a := assert.New(t)
-	appCfg := cfg.NewAppConfig()
-	cfg.ConnectDatabase(appCfg)
+	cfg.Connect()
 	deleteRoute := func() {
 		cfg.DB.MustExec("delete from route")
 	}

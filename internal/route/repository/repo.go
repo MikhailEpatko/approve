@@ -1,7 +1,7 @@
 package repository
 
 import (
-	cfg "approve/internal/config"
+	cfg "approve/internal/database"
 	rm "approve/internal/route/model"
 
 	"github.com/jmoiron/sqlx"

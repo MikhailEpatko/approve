@@ -1,15 +1,12 @@
 package server
 
 import (
-	cfg "approve/internal/config"
 	routeHandler "approve/internal/route/handler"
+	stepGroupHandler "approve/internal/stepgroup/handler"
 	"github.com/gofiber/fiber"
 )
 
-func RegisterRoutes(app *fiber.App) (err error) {
-	appCfg := cfg.NewAppConfig()
-	cfg.ConnectDatabase(appCfg)
-	//app = fiber.New()
+func SetupRoutes(app *fiber.App) {
 	api := app.Group("/api")
 
 	api.Post("/route", routeHandler.CreateRouteTemplate)
@@ -17,5 +14,7 @@ func RegisterRoutes(app *fiber.App) (err error) {
 	api.Put("/route/:routeId", routeHandler.StartRoute)
 	api.Post("/route/by-filter", routeHandler.FindByFilter)
 
-	return err
+	api.Post("/group", stepGroupHandler.CreateStepGroupTemplate)
+	api.Put("/group", stepGroupHandler.UpdateStepGroup)
+
 }

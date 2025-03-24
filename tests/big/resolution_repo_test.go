@@ -2,7 +2,7 @@ package big
 
 import (
 	cm "approve/internal/common"
-	cfg "approve/internal/config"
+	cfg "approve/internal/database"
 	resolutionRepo "approve/internal/resolution/repository"
 	fx "approve/tests/big/fixtures"
 	"fmt"
@@ -13,8 +13,7 @@ import (
 
 func TestResolutionRepository(t *testing.T) {
 	a := assert.New(t)
-	appCfg := cfg.NewAppConfig()
-	cfg.ConnectDatabase(appCfg)
+	cfg.Connect()
 	deleteRoute := func() {
 		cfg.DB.MustExec("delete from route")
 	}

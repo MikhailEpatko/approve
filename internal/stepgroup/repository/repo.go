@@ -2,7 +2,7 @@ package repository
 
 import (
 	cm "approve/internal/common"
-	cfg "approve/internal/config"
+	cfg "approve/internal/database"
 	gm "approve/internal/stepgroup/model"
 
 	"github.com/jmoiron/sqlx"
@@ -10,6 +10,14 @@ import (
 
 func FindById(id int64) (group gm.StepGroupEntity, err error) {
 	err = cfg.DB.Get(&group, "select * from step_group where id = $1", id)
+	return group, err
+}
+
+func FindByIdTx(
+	tx *sqlx.Tx,
+	id int64,
+) (group gm.StepGroupEntity, err error) {
+	err = tx.Get(&group, "select * from step_group where id = $1", id)
 	return group, err
 }
 
@@ -52,8 +60,8 @@ func StartFirstGroup(
 	return group, err
 }
 
-func Update(group gm.StepGroupEntity) (groupId int64, err error) {
-	_, err = cfg.DB.NamedExec(
+func Update(tx *sqlx.Tx, group gm.StepGroupEntity) (groupId int64, err error) {
+	_, err = tx.NamedExec(
 		`update step_group 
      set name = :name,
        number = :number,
@@ -67,8 +75,11 @@ func Update(group gm.StepGroupEntity) (groupId int64, err error) {
 	return groupId, err
 }
 
-func IsRouteProcessing(stepGroupId int64) (res bool, err error) {
-	err = cfg.DB.Get(
+func IsRouteProcessing(
+	tx *sqlx.Tx,
+	stepGroupId int64,
+) (res bool, err error) {
+	err = tx.Get(
 		&res,
 		`select exists (
        select 1 from step_group g 

@@ -2,6 +2,7 @@ package server
 
 import (
 	routeHandler "approve/internal/route/handler"
+	stepHandler "approve/internal/step/handler"
 	stepGroupHandler "approve/internal/stepgroup/handler"
 	"github.com/gofiber/fiber"
 )
@@ -16,5 +17,8 @@ func SetupRoutes(app *fiber.App) {
 
 	api.Post("/group", stepGroupHandler.CreateStepGroupTemplate)
 	api.Put("/group", stepGroupHandler.UpdateStepGroup)
+
+	api.Post("/step", stepHandler.CreateStepTemplate)
+	api.Put("/step", stepHandler.UpdateStep)
 
 }

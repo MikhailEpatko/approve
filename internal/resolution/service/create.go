@@ -3,7 +3,7 @@ package service
 import (
 	approverRepo "approve/internal/approver/repository"
 	cm "approve/internal/common"
-	cfg "approve/internal/database"
+	"approve/internal/database"
 	resm "approve/internal/resolution/model"
 	resolutionRepo "approve/internal/resolution/repository"
 	ss "approve/internal/step/service"
@@ -25,7 +25,7 @@ var (
 func CreateResolution(
 	request resm.CreateResolutionRequest,
 ) (resolutionId int64, err error) {
-	tx, err := cfg.DB.Beginx()
+	tx, err := database.DB.Beginx()
 	defer func() {
 		if err != nil {
 			txErr := tx.Rollback()

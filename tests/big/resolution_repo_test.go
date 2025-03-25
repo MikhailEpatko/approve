@@ -2,7 +2,7 @@ package big
 
 import (
 	cm "approve/internal/common"
-	cfg "approve/internal/database"
+	"approve/internal/database"
 	resolutionRepo "approve/internal/resolution/repository"
 	fx "approve/tests/big/fixtures"
 	"fmt"
@@ -13,9 +13,9 @@ import (
 
 func TestResolutionRepository(t *testing.T) {
 	a := assert.New(t)
-	cfg.Connect()
+	database.Connect()
 	deleteRoute := func() {
-		cfg.DB.MustExec("delete from route")
+		database.DB.MustExec("delete from route")
 	}
 
 	defer func() {
@@ -52,7 +52,7 @@ func TestResolutionRepository(t *testing.T) {
 		step2 := fx.Step(group2, 1, cm.NEW, cm.PARALLEL_ALL_OF, false)
 		_ = fx.Approver(step2, 1, cm.NEW)
 
-		tx := cfg.DB.MustBegin()
+		tx := database.DB.MustBegin()
 		got, err := resolutionRepo.ApprovingInfoTx(tx, approver.Id)
 		a.Nil(tx.Commit())
 

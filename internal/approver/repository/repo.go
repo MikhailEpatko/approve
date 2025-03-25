@@ -2,24 +2,24 @@ package repository
 
 import (
 	am "approve/internal/approver/model"
-	cfg "approve/internal/database"
+	"approve/internal/database"
 	sm "approve/internal/step/model"
 	"github.com/jmoiron/sqlx"
 )
 
 func FindById(approverId int64) (approver am.ApproverEntity, err error) {
-	err = cfg.DB.Get(&approver, "select * from approver where id = $1", approverId)
+	err = database.DB.Get(&approver, "select * from approver where id = $1", approverId)
 	return approver, err
 }
 
 func FindByStepId(stepId int64) ([]am.ApproverEntity, error) {
 	var approvers []am.ApproverEntity
-	err := cfg.DB.Select(&approvers, "select * from approver where step_id = $1", stepId)
+	err := database.DB.Select(&approvers, "select * from approver where step_id = $1", stepId)
 	return approvers, err
 }
 
 func Save(approver am.ApproverEntity) (id int64, err error) {
-	err = cfg.DB.Get(
+	err = database.DB.Get(
 		&id,
 		`insert into approver (step_id, guid, name, position, email, number, status)
      values ($1, $2, $3, $4, $5, $6, $7) returning id`,
@@ -49,7 +49,7 @@ func StartStepApprovers(
 }
 
 func Update(approver am.ApproverEntity) (approverId int64, err error) {
-	_, err = cfg.DB.NamedExec(
+	_, err = database.DB.NamedExec(
 		`update approver 
      set name = :name,
        guid = :guid,
@@ -112,7 +112,7 @@ func StartNextApprover(
 }
 
 func IsRouteStarted(approverId int64) (res bool, err error) {
-	err = cfg.DB.Get(
+	err = database.DB.Get(
 		&res,
 		`select exists (select 1 
                     from route r

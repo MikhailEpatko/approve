@@ -1,7 +1,7 @@
 package repository
 
 import (
-	cfg "approve/internal/database"
+	"approve/internal/database"
 	rm "approve/internal/route/model"
 	"strings"
 )
@@ -12,7 +12,7 @@ func FindByfilter(filter rm.FilterRouteRequest) ([]rm.RouteEntity, int64, error)
 	var routes []rm.RouteEntity
 	var total int64
 	query, params := countByFilterQueryAndParams(filter)
-	rows, err := cfg.DB.NamedQuery(query, params)
+	rows, err := database.DB.NamedQuery(query, params)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -26,7 +26,7 @@ func FindByfilter(filter rm.FilterRouteRequest) ([]rm.RouteEntity, int64, error)
 		return routes, 0, nil
 	}
 	query, params = findByFilterQueryAndParams(filter)
-	rows, err = cfg.DB.NamedQuery(query, params)
+	rows, err = database.DB.NamedQuery(query, params)
 	if err != nil {
 		return nil, 0, err
 	}

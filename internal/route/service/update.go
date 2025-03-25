@@ -2,7 +2,7 @@ package service
 
 import (
 	cm "approve/internal/common"
-	cfg "approve/internal/database"
+	"approve/internal/database"
 	rm "approve/internal/route/model"
 	routeRepo "approve/internal/route/repository"
 	"fmt"
@@ -14,7 +14,7 @@ func UpdateRoute(request rm.UpdateRouteRequest) (routeId int64, err error) {
 		return 0, err
 	}
 
-	tx, err := cfg.DB.Beginx()
+	tx, err := database.DB.Beginx()
 	defer func() {
 		if err != nil {
 			txErr := tx.Rollback()

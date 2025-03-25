@@ -2,7 +2,7 @@ package big
 
 import (
 	cm "approve/internal/common"
-	cfg "approve/internal/database"
+	"approve/internal/database"
 	rm "approve/internal/route/model"
 	routeRepo "approve/internal/route/repository"
 	"github.com/stretchr/testify/assert"
@@ -21,9 +21,9 @@ func setup() rm.RouteEntity {
 
 func TestRouteRepository(t *testing.T) {
 	a := assert.New(t)
-	cfg.Connect()
+	database.Connect()
 	deleteRoutes := func() {
-		cfg.DB.MustExec("delete from route")
+		database.DB.MustExec("delete from route")
 	}
 
 	t.Run("save route", func(t *testing.T) {
@@ -57,7 +57,7 @@ func TestRouteRepository(t *testing.T) {
 	t.Run("start route", func(t *testing.T) {
 		want := setup()
 
-		tx := cfg.DB.MustBegin()
+		tx := database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
 		a.Nil(routeRepo.StartRoute(tx, want.Id))
 		_ = tx.Commit()
@@ -82,7 +82,7 @@ func TestRouteRepository(t *testing.T) {
 			IsApproved:  true,
 		}
 
-		tx := cfg.DB.MustBegin()
+		tx := database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
 		_, err := routeRepo.Update(tx, toUpdate)
 		a.Nil(err)
@@ -101,7 +101,7 @@ func TestRouteRepository(t *testing.T) {
 	t.Run("is route started (false)", func(t *testing.T) {
 		route := setup()
 
-		tx := cfg.DB.MustBegin()
+		tx := database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
 		got, err := routeRepo.IsRouteStarted(tx, route.Id)
 		a.Nil(err)
@@ -114,7 +114,7 @@ func TestRouteRepository(t *testing.T) {
 
 	t.Run("is route started (true)", func(t *testing.T) {
 		route := setup()
-		tx := cfg.DB.MustBegin()
+		tx := database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
 		a.Nil(routeRepo.StartRoute(tx, route.Id))
 
@@ -129,7 +129,7 @@ func TestRouteRepository(t *testing.T) {
 
 	t.Run("finish route (isApproved should be true)", func(t *testing.T) {
 		want := setup()
-		tx := cfg.DB.MustBegin()
+		tx := database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
 		a.Nil(routeRepo.StartRoute(tx, want.Id))
 		isStarted, _ := routeRepo.IsRouteStarted(tx, want.Id)
@@ -137,7 +137,7 @@ func TestRouteRepository(t *testing.T) {
 
 		a.True(isStarted)
 
-		tx = cfg.DB.MustBegin()
+		tx = database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
 		a.Nil(routeRepo.FinishRoute(tx, want.Id, true))
 		_ = tx.Commit()
@@ -154,7 +154,7 @@ func TestRouteRepository(t *testing.T) {
 
 	t.Run("finish route (isApproved should be false)", func(t *testing.T) {
 		want := setup()
-		tx := cfg.DB.MustBegin()
+		tx := database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
 		a.Nil(routeRepo.StartRoute(tx, want.Id))
 		isStarted, _ := routeRepo.IsRouteStarted(tx, want.Id)
@@ -162,7 +162,7 @@ func TestRouteRepository(t *testing.T) {
 
 		a.True(isStarted)
 
-		tx = cfg.DB.MustBegin()
+		tx = database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
 		a.Nil(routeRepo.FinishRoute(tx, want.Id, false))
 		_ = tx.Commit()

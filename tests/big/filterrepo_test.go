@@ -4,7 +4,7 @@ import (
 	am "approve/internal/approver/model"
 	approverRepo "approve/internal/approver/repository"
 	cm "approve/internal/common"
-	cfg "approve/internal/database"
+	"approve/internal/database"
 	rm "approve/internal/route/model"
 	routeRepo "approve/internal/route/repository"
 	sm "approve/internal/step/model"
@@ -28,9 +28,9 @@ var (
 
 func TestFindByFilterRouteRepository(t *testing.T) {
 	a := assert.New(t)
-	cfg.Connect()
+	database.Connect()
 	deleteRoutes := func() {
-		cfg.DB.MustExec("delete from route")
+		database.DB.MustExec("delete from route")
 	}
 	defer func() {
 		if r := recover(); r != nil {

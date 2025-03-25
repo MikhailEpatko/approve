@@ -2,7 +2,7 @@ package service
 
 import (
 	cm "approve/internal/common"
-	cfg "approve/internal/database"
+	"approve/internal/database"
 	rs "approve/internal/route/service"
 	gm "approve/internal/stepgroup/model"
 	stepGroupRepo "approve/internal/stepgroup/repository"
@@ -12,9 +12,9 @@ import (
 )
 
 var (
-	ErrStepGroupNotFound       = errors.New("route not found")
-	ErrStepGroupAlreadyStarted = errors.New("route is already started")
-	ErrStepGroupIsFinished     = errors.New("route is finished")
+	ErrStepGroupNotFound       = errors.New("step group not found")
+	ErrStepGroupAlreadyStarted = errors.New("step group is already started")
+	ErrStepGroupIsFinished     = errors.New("step group is finished")
 )
 
 func UpdateStepGroup(request gm.UpdateStepGroupRequest) (groupId int64, err error) {
@@ -22,7 +22,7 @@ func UpdateStepGroup(request gm.UpdateStepGroupRequest) (groupId int64, err erro
 	if err != nil {
 		return 0, fmt.Errorf("updating step group: failed validating request: %w", err)
 	}
-	tx, err := cfg.DB.Beginx()
+	tx, err := database.DB.Beginx()
 	defer func() {
 		if err != nil {
 			txErr := tx.Rollback()

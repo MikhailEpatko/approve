@@ -1,7 +1,7 @@
 package repository
 
 import (
-	cfg "approve/internal/database"
+	"approve/internal/database"
 	rm "approve/internal/route/model"
 
 	"github.com/jmoiron/sqlx"
@@ -10,7 +10,7 @@ import (
 func Save(
 	route rm.RouteEntity,
 ) (res int64, err error) {
-	err = cfg.DB.Get(
+	err = database.DB.Get(
 		&res,
 		"insert into route (name, description, status, is_approved) values ($1, $2, $3, $4) returning id",
 		route.Name,
@@ -71,7 +71,7 @@ func FinishRoute(
 }
 
 func FindById(id int64) (res rm.RouteEntity, err error) {
-	err = cfg.DB.Get(&res, "select * from route where id = $1", id)
+	err = database.DB.Get(&res, "select * from route where id = $1", id)
 	return res, err
 }
 
@@ -81,6 +81,6 @@ func FindByIdTx(tx *sqlx.Tx, id int64) (res rm.RouteEntity, err error) {
 }
 
 func DeleteById(routeId int64) error {
-	_, err := cfg.DB.Exec("delete from route where id = $1", routeId)
+	_, err := database.DB.Exec("delete from route where id = $1", routeId)
 	return err
 }

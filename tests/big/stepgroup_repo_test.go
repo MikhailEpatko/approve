@@ -2,7 +2,7 @@ package big
 
 import (
 	cm "approve/internal/common"
-	cfg "approve/internal/database"
+	"approve/internal/database"
 	gm "approve/internal/stepgroup/model"
 	stepGroupRepo "approve/internal/stepgroup/repository"
 	fx "approve/tests/big/fixtures"
@@ -18,9 +18,9 @@ var (
 
 func TestStepGroupRepository(t *testing.T) {
 	a := assert.New(t)
-	cfg.Connect()
+	database.Connect()
 	deleteRoute := func() {
-		cfg.DB.MustExec("delete from route")
+		database.DB.MustExec("delete from route")
 	}
 
 	defer func() {
@@ -50,7 +50,7 @@ func TestStepGroupRepository(t *testing.T) {
 		want := fx.Group(route1, 1, cm.NEW, cm.SERIAL, false)
 		group2Before := fx.Group(route1, 2, cm.NEW, cm.PARALLEL_ALL_OF, false)
 
-		tx := cfg.DB.MustBegin()
+		tx := database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
 		got, err := stepGroupRepo.StartFirstGroup(tx, route1.Id)
 		a.Nil(tx.Commit())
@@ -83,7 +83,7 @@ func TestStepGroupRepository(t *testing.T) {
 			StepOrder: cm.PARALLEL_ALL_OF,
 		}
 
-		tx := cfg.DB.MustBegin()
+		tx := database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
 		got, err := stepGroupRepo.Update(tx, toUpdate)
 		a.Nil(err)
@@ -115,7 +115,7 @@ func TestStepGroupRepository(t *testing.T) {
 			route := fx.Route(routeName, routeStatus)
 			group := fx.Group(route, 1, routeStatus, cm.SERIAL, false)
 
-			tx := cfg.DB.MustBegin()
+			tx := database.DB.MustBegin()
 			defer func() { _ = tx.Rollback() }()
 			got, err := stepGroupRepo.IsRouteProcessing(tx, group.Id)
 			a.Nil(tx.Commit())
@@ -130,7 +130,7 @@ func TestStepGroupRepository(t *testing.T) {
 		route := fx.Route(routeName, status)
 		group := fx.Group(route, 1, status, cm.SERIAL, false)
 
-		tx := cfg.DB.MustBegin()
+		tx := database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
 		a.Nil(stepGroupRepo.FinishGroup(tx, group.Id))
 		a.Nil(tx.Commit())
@@ -146,7 +146,7 @@ func TestStepGroupRepository(t *testing.T) {
 		group1 := fx.Group(route, 1, status, cm.SERIAL, false)
 		group2 := fx.Group(route, 2, cm.NEW, cm.SERIAL, false)
 
-		tx := cfg.DB.MustBegin()
+		tx := database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
 		nextGroupId, err := stepGroupRepo.StartNextGroup(tx, route.Id, group1.Id)
 		a.Nil(err)
@@ -166,7 +166,7 @@ func TestStepGroupRepository(t *testing.T) {
 		_ = fx.Step(group, 1, cm.FINISHED, cm.SERIAL, true)
 		lastStep := fx.Step(group, 2, cm.FINISHED, cm.PARALLEL_ALL_OF, true)
 
-		tx := cfg.DB.MustBegin()
+		tx := database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
 		got, err := stepGroupRepo.CalculateAndSetIsApproved(
 			tx,
@@ -190,7 +190,7 @@ func TestStepGroupRepository(t *testing.T) {
 		_ = fx.Step(group, 1, cm.FINISHED, cm.SERIAL, true)
 		lastStep := fx.Step(group, 2, cm.FINISHED, cm.PARALLEL_ALL_OF, false)
 
-		tx := cfg.DB.MustBegin()
+		tx := database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
 		got, err := stepGroupRepo.CalculateAndSetIsApproved(
 			tx,
@@ -216,7 +216,7 @@ func TestStepGroupRepository(t *testing.T) {
 			_ = fx.Step(group, 1, cm.FINISHED, cm.SERIAL, true)
 			lastStep := fx.Step(group, 2, cm.FINISHED, cm.PARALLEL_ALL_OF, true)
 
-			tx := cfg.DB.MustBegin()
+			tx := database.DB.MustBegin()
 			defer func() { _ = tx.Rollback() }()
 			got, err := stepGroupRepo.CalculateAndSetIsApproved(
 				tx,
@@ -242,7 +242,7 @@ func TestStepGroupRepository(t *testing.T) {
 			_ = fx.Step(group, 1, cm.FINISHED, cm.SERIAL, true)
 			lastStep := fx.Step(group, 2, cm.FINISHED, cm.PARALLEL_ALL_OF, false)
 
-			tx := cfg.DB.MustBegin()
+			tx := database.DB.MustBegin()
 			defer func() { _ = tx.Rollback() }()
 			got, err := stepGroupRepo.CalculateAndSetIsApproved(
 				tx,
@@ -268,7 +268,7 @@ func TestStepGroupRepository(t *testing.T) {
 			_ = fx.Step(group, 1, cm.FINISHED, cm.SERIAL, true)
 			lastStep := fx.Step(group, 2, cm.FINISHED, cm.PARALLEL_ALL_OF, true)
 
-			tx := cfg.DB.MustBegin()
+			tx := database.DB.MustBegin()
 			defer func() { _ = tx.Rollback() }()
 			got, err := stepGroupRepo.CalculateAndSetIsApproved(
 				tx,
@@ -294,7 +294,7 @@ func TestStepGroupRepository(t *testing.T) {
 			_ = fx.Step(group, 1, cm.FINISHED, cm.SERIAL, true)
 			lastStep := fx.Step(group, 2, cm.FINISHED, cm.PARALLEL_ALL_OF, false)
 
-			tx := cfg.DB.MustBegin()
+			tx := database.DB.MustBegin()
 			defer func() { _ = tx.Rollback() }()
 			got, err := stepGroupRepo.CalculateAndSetIsApproved(
 				tx,
@@ -320,7 +320,7 @@ func TestStepGroupRepository(t *testing.T) {
 			_ = fx.Step(group, 1, cm.FINISHED, cm.SERIAL, false)
 			lastStep := fx.Step(group, 2, cm.FINISHED, cm.PARALLEL_ALL_OF, false)
 
-			tx := cfg.DB.MustBegin()
+			tx := database.DB.MustBegin()
 			defer func() { _ = tx.Rollback() }()
 			got, err := stepGroupRepo.CalculateAndSetIsApproved(
 				tx,

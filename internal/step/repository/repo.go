@@ -2,7 +2,7 @@ package repository
 
 import (
 	"approve/internal/common"
-	cfg "approve/internal/database"
+	"approve/internal/database"
 	sm "approve/internal/step/model"
 	gm "approve/internal/stepgroup/model"
 
@@ -10,7 +10,19 @@ import (
 )
 
 func FindById(stepId int64) (step sm.StepEntity, err error) {
-	err = cfg.DB.Get(
+	err = database.DB.Get(
+		&step,
+		`select * from step where id = $1`,
+		stepId,
+	)
+	return step, err
+}
+
+func FindByIdTx(
+	tx *sqlx.Tx,
+	stepId int64,
+) (step sm.StepEntity, err error) {
+	err = tx.Get(
 		&step,
 		`select * from step where id = $1`,
 		stepId,
@@ -20,12 +32,12 @@ func FindById(stepId int64) (step sm.StepEntity, err error) {
 
 func FindByGroupId(id int64) ([]sm.StepEntity, error) {
 	var steps []sm.StepEntity
-	err := cfg.DB.Select(&steps, "select * from step where step_group_id = $1", id)
+	err := database.DB.Select(&steps, "select * from step where step_group_id = $1", id)
 	return steps, err
 }
 
 func Save(step sm.StepEntity) (id int64, err error) {
-	err = cfg.DB.Get(
+	err = database.DB.Get(
 		&id,
 		`insert into step (step_group_id, name, number, status, approver_order, is_approved)
      values ($1, $2, $3, $4, $5, $6) returning id`,
@@ -62,8 +74,11 @@ func StartSteps(
 	return saved, err
 }
 
-func Update(step sm.StepEntity) (stepId int64, err error) {
-	_, err = cfg.DB.NamedExec(
+func Update(
+	tx *sqlx.Tx,
+	step sm.StepEntity,
+) (stepId int64, err error) {
+	_, err = tx.NamedExec(
 		`update step 
      set name = :name,
        number = :number,
@@ -77,8 +92,11 @@ func Update(step sm.StepEntity) (stepId int64, err error) {
 	return stepId, err
 }
 
-func IsRouteStarted(stepId int64) (res bool, err error) {
-	err = cfg.DB.Get(
+func IsRouteProcessing(
+	tx *sqlx.Tx,
+	stepId int64,
+) (res bool, err error) {
+	err = tx.Get(
 		&res,
 		`select exists (
        select 1 from step s 

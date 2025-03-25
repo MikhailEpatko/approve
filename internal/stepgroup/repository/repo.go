@@ -2,14 +2,14 @@ package repository
 
 import (
 	cm "approve/internal/common"
-	cfg "approve/internal/database"
+	"approve/internal/database"
 	gm "approve/internal/stepgroup/model"
 
 	"github.com/jmoiron/sqlx"
 )
 
 func FindById(id int64) (group gm.StepGroupEntity, err error) {
-	err = cfg.DB.Get(&group, "select * from step_group where id = $1", id)
+	err = database.DB.Get(&group, "select * from step_group where id = $1", id)
 	return group, err
 }
 
@@ -23,12 +23,12 @@ func FindByIdTx(
 
 func FindByRouteId(id int64) ([]gm.StepGroupEntity, error) {
 	var groups []gm.StepGroupEntity
-	err := cfg.DB.Select(&groups, "select * from step_group where route_id = $1", id)
+	err := database.DB.Select(&groups, "select * from step_group where route_id = $1", id)
 	return groups, err
 }
 
 func Save(stepGroup gm.StepGroupEntity) (id int64, err error) {
-	err = cfg.DB.Get(
+	err = database.DB.Get(
 		&id,
 		`insert into step_group (route_id, name, number, status, step_order, is_approved)
      values ($1, $2, $3, $4, $5, $6)

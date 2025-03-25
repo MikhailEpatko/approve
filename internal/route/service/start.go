@@ -3,7 +3,7 @@ package service
 import (
 	approverRepo "approve/internal/approver/repository"
 	cm "approve/internal/common"
-	cfg "approve/internal/database"
+	"approve/internal/database"
 	routeRepo "approve/internal/route/repository"
 	sm "approve/internal/step/model"
 	stepRepo "approve/internal/step/repository"
@@ -21,7 +21,7 @@ var (
 )
 
 func StartRoute(routeId int64) (err error) {
-	tx, err := cfg.DB.Beginx()
+	tx, err := database.DB.Beginx()
 	defer func() {
 		if err != nil {
 			txErr := tx.Rollback()

@@ -29,11 +29,11 @@ func CreateStepGroupTemplate(c *fiber.Ctx) {
 		cm.Logger.Error("error creating step group template", zap.Error(err))
 		return
 	}
-	cm.Logger.Info("created step group", zap.String("groupId", strconv.FormatInt(groupId, 10)))
+	cm.Logger.Info("created step group template", zap.String("groupId", strconv.FormatInt(groupId, 10)))
 
 	if err := cm.OkResponse(c, groupId); err != nil {
 		_ = cm.ErrResponse(c, 500, "error returning created step group template id")
-		cm.Logger.Error("error returning created stepgroup template id", zap.Error(err))
+		cm.Logger.Error("error returning created step group template id", zap.Error(err))
 		return
 	}
 }

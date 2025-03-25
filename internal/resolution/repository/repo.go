@@ -1,7 +1,7 @@
 package repository
 
 import (
-	cfg "approve/internal/database"
+	"approve/internal/database"
 	resm "approve/internal/resolution/model"
 
 	"github.com/jmoiron/sqlx"
@@ -9,12 +9,12 @@ import (
 
 func FindByApproverId(id int64) ([]resm.ResolutionEntity, error) {
 	var resolutions []resm.ResolutionEntity
-	err := cfg.DB.Select(&resolutions, "select * from resolution where approver_id = $1", id)
+	err := database.DB.Select(&resolutions, "select * from resolution where approver_id = $1", id)
 	return resolutions, err
 }
 
 func Save(resolution resm.ResolutionEntity) (resolutionId int64, err error) {
-	err = cfg.DB.Get(
+	err = database.DB.Get(
 		&resolutionId,
 		`insert into resolution (approver_id, is_approved, comment)
      values ($1, $2, $3)

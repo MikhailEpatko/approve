@@ -19,11 +19,14 @@ var (
 
 func UpdateStepGroup(request gm.UpdateStepGroupRequest) (groupId int64, err error) {
 	err = cm.Validate(request)
+	if err != nil {
+		return 0, fmt.Errorf("updating step group: failed validating request: %w", err)
+	}
 	tx, err := cfg.DB.Beginx()
 	defer func() {
 		if err != nil {
 			txErr := tx.Rollback()
-			err = fmt.Errorf("failed updating route: %w, %w", err, txErr)
+			err = fmt.Errorf("failed updating step group: %w, %w", err, txErr)
 		} else {
 			err = tx.Commit()
 		}
@@ -38,11 +41,11 @@ func validateStepGroup(
 ) error {
 	isRouteStarted, err := stepGroupRepo.IsRouteProcessing(tx, request.Id)
 	if err != nil {
-		return fmt.Errorf("error update step group: %w", err)
+		return fmt.Errorf("failed updating step group: %w", err)
 	}
 
 	if isRouteStarted {
-		return fmt.Errorf("error update step group: %w", rs.ErrRouteAlreadyStarted)
+		return fmt.Errorf("failed updating step group: %w", rs.ErrRouteAlreadyStarted)
 	}
 
 	group, err := stepGroupRepo.FindByIdTx(tx, request.Id)

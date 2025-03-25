@@ -2,7 +2,7 @@ package repository
 
 import (
 	am "approve/internal/approver/model"
-	cfg "approve/internal/config"
+	cfg "approve/internal/database"
 	sm "approve/internal/step/model"
 	"github.com/jmoiron/sqlx"
 )

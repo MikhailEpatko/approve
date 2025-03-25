@@ -2,13 +2,18 @@ package service
 
 import (
 	cm "approve/internal/common"
-	cfg "approve/internal/config"
+	cfg "approve/internal/database"
 	rm "approve/internal/route/model"
 	routeRepo "approve/internal/route/repository"
 	"fmt"
 )
 
 func UpdateRoute(request rm.UpdateRouteRequest) (routeId int64, err error) {
+	err = cm.Validate(request)
+	if err != nil {
+		return 0, err
+	}
+
 	tx, err := cfg.DB.Beginx()
 	defer func() {
 		if err != nil {
@@ -18,6 +23,7 @@ func UpdateRoute(request rm.UpdateRouteRequest) (routeId int64, err error) {
 			err = tx.Commit()
 		}
 	}()
+
 	err = cm.SafeExecute(err, func() error {
 		route, innerErr := routeRepo.FindByIdTx(tx, routeId)
 		switch {
@@ -32,5 +38,6 @@ func UpdateRoute(request rm.UpdateRouteRequest) (routeId int64, err error) {
 		}
 		return nil
 	})
+
 	return cm.SafeExecuteG(err, func() (int64, error) { return routeRepo.Update(tx, request.ToEntity()) })
 }

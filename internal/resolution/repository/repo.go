@@ -1,7 +1,7 @@
 package repository
 
 import (
-	cfg "approve/internal/config"
+	cfg "approve/internal/database"
 	resm "approve/internal/resolution/model"
 
 	"github.com/jmoiron/sqlx"

@@ -2,7 +2,7 @@ package big
 
 import (
 	cm "approve/internal/common"
-	cfg "approve/internal/config"
+	cfg "approve/internal/database"
 	rm "approve/internal/route/model"
 	routeRepo "approve/internal/route/repository"
 	"github.com/stretchr/testify/assert"
@@ -21,8 +21,7 @@ func setup() rm.RouteEntity {
 
 func TestRouteRepository(t *testing.T) {
 	a := assert.New(t)
-	appCfg := cfg.NewAppConfig()
-	cfg.ConnectDatabase(appCfg)
+	cfg.Connect()
 	deleteRoutes := func() {
 		cfg.DB.MustExec("delete from route")
 	}

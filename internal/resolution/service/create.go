@@ -3,7 +3,7 @@ package service
 import (
 	approverRepo "approve/internal/approver/repository"
 	cm "approve/internal/common"
-	cfg "approve/internal/config"
+	cfg "approve/internal/database"
 	resm "approve/internal/resolution/model"
 	resolutionRepo "approve/internal/resolution/repository"
 	ss "approve/internal/step/service"

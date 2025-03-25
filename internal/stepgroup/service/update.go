@@ -2,15 +2,62 @@ package service
 
 import (
 	cm "approve/internal/common"
+	cfg "approve/internal/database"
+	rs "approve/internal/route/service"
 	gm "approve/internal/stepgroup/model"
 	stepGroupRepo "approve/internal/stepgroup/repository"
+	"errors"
 	"fmt"
+	"github.com/jmoiron/sqlx"
+)
+
+var (
+	ErrStepGroupNotFound       = errors.New("route not found")
+	ErrStepGroupAlreadyStarted = errors.New("route is already started")
+	ErrStepGroupIsFinished     = errors.New("route is finished")
 )
 
 func UpdateStepGroup(request gm.UpdateStepGroupRequest) (groupId int64, err error) {
-	isRouteStarted, err := stepGroupRepo.IsRouteProcessing(request.Id)
-	if err == nil && isRouteStarted {
-		err = fmt.Errorf("route was started and cannot be updated")
+	err = cm.Validate(request)
+	if err != nil {
+		return 0, fmt.Errorf("updating step group: failed validating request: %w", err)
 	}
-	return cm.SafeExecuteG(err, func() (int64, error) { return stepGroupRepo.Update(request.ToEntity()) })
+	tx, err := cfg.DB.Beginx()
+	defer func() {
+		if err != nil {
+			txErr := tx.Rollback()
+			err = fmt.Errorf("failed updating step group: %w, %w", err, txErr)
+		} else {
+			err = tx.Commit()
+		}
+	}()
+	err = cm.SafeExecute(err, func() error { return validateStepGroup(tx, request) })
+	return cm.SafeExecuteG(err, func() (int64, error) { return stepGroupRepo.Update(tx, request.ToEntity()) })
+}
+
+func validateStepGroup(
+	tx *sqlx.Tx,
+	request gm.UpdateStepGroupRequest,
+) error {
+	isRouteStarted, err := stepGroupRepo.IsRouteProcessing(tx, request.Id)
+	if err != nil {
+		return fmt.Errorf("failed updating step group: %w", err)
+	}
+
+	if isRouteStarted {
+		return fmt.Errorf("failed updating step group: %w", rs.ErrRouteAlreadyStarted)
+	}
+
+	group, err := stepGroupRepo.FindByIdTx(tx, request.Id)
+	switch {
+	case err != nil:
+		return err
+	case group.Id == 0:
+		return ErrStepGroupNotFound
+	case group.Status == cm.FINISHED:
+		return ErrStepGroupIsFinished
+	case group.Status == cm.STARTED:
+		return ErrStepGroupAlreadyStarted
+	}
+	return nil
 }

@@ -2,7 +2,7 @@ package repository
 
 import (
 	"approve/internal/common"
-	cfg "approve/internal/config"
+	cfg "approve/internal/database"
 	sm "approve/internal/step/model"
 	gm "approve/internal/stepgroup/model"
 

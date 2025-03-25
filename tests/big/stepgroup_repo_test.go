@@ -2,7 +2,7 @@ package big
 
 import (
 	cm "approve/internal/common"
-	cfg "approve/internal/config"
+	cfg "approve/internal/database"
 	gm "approve/internal/stepgroup/model"
 	stepGroupRepo "approve/internal/stepgroup/repository"
 	fx "approve/tests/big/fixtures"
@@ -18,8 +18,7 @@ var (
 
 func TestStepGroupRepository(t *testing.T) {
 	a := assert.New(t)
-	appCfg := cfg.NewAppConfig()
-	cfg.ConnectDatabase(appCfg)
+	cfg.Connect()
 	deleteRoute := func() {
 		cfg.DB.MustExec("delete from route")
 	}
@@ -84,10 +83,13 @@ func TestStepGroupRepository(t *testing.T) {
 			StepOrder: cm.PARALLEL_ALL_OF,
 		}
 
-		got, err := stepGroupRepo.Update(toUpdate)
+		tx := cfg.DB.MustBegin()
+		defer func() { _ = tx.Rollback() }()
+		got, err := stepGroupRepo.Update(tx, toUpdate)
 		a.Nil(err)
 		a.NotNil(got)
 		a.Equal(groupBefore.Id, got)
+		a.Nil(tx.Commit())
 
 		groupAfter, err := stepGroupRepo.FindById(groupBefore.Id)
 
@@ -113,7 +115,10 @@ func TestStepGroupRepository(t *testing.T) {
 			route := fx.Route(routeName, routeStatus)
 			group := fx.Group(route, 1, routeStatus, cm.SERIAL, false)
 
-			got, err := stepGroupRepo.IsRouteProcessing(group.Id)
+			tx := cfg.DB.MustBegin()
+			defer func() { _ = tx.Rollback() }()
+			got, err := stepGroupRepo.IsRouteProcessing(tx, group.Id)
+			a.Nil(tx.Commit())
 
 			a.Nil(err)
 			a.Equal(want, got)

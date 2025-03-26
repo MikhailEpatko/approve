@@ -104,8 +104,10 @@ func TestApproverRepository(t *testing.T) {
 			Status:   cm.STARTED,
 		}
 
-		got, err := approverRepo.Update(toUpdate)
+		tx := database.DB.MustBegin()
+		got, err := approverRepo.Update(tx, toUpdate)
 		a.Nil(err)
+		a.Nil(tx.Commit())
 		a.NotNil(got)
 		a.Equal(approver.Id, got)
 
@@ -170,7 +172,7 @@ func TestApproverRepository(t *testing.T) {
 		deleteRoute()
 	})
 
-	t.Run("should start nex approver in step", func(t *testing.T) {
+	t.Run("should start next approver in step", func(t *testing.T) {
 		route := fx.Route("route", cm.STARTED)
 		group := fx.Group(route, 1, cm.STARTED, cm.SERIAL, false)
 		step := fx.Step(group, 1, cm.STARTED, cm.SERIAL, false)
@@ -189,26 +191,44 @@ func TestApproverRepository(t *testing.T) {
 		deleteRoute()
 	})
 
-	t.Run("IsRouteStarted (true)", func(t *testing.T) {
+	t.Run("IsRouteProcessing (STARTED - true)", func(t *testing.T) {
 		route := fx.Route("route", cm.STARTED)
 		group := fx.Group(route, 1, cm.NEW, cm.SERIAL, false)
 		step := fx.Step(group, 1, cm.NEW, cm.SERIAL, false)
 		approver := fx.Approver(step, 1, cm.NEW)
 
-		res, err := approverRepo.IsRouteStarted(approver.Id)
+		tx := database.DB.MustBegin()
+		res, err := approverRepo.IsRouteProcessing(tx, approver.Id)
 		a.Nil(err)
+		a.Nil(tx.Commit())
 		a.True(res)
 		deleteRoute()
 	})
 
-	t.Run("IsRouteStarted (false)", func(t *testing.T) {
+	t.Run("IsRouteProcessing (FINISHED - true)", func(t *testing.T) {
+		route := fx.Route("route", cm.FINISHED)
+		group := fx.Group(route, 1, cm.NEW, cm.SERIAL, false)
+		step := fx.Step(group, 1, cm.NEW, cm.SERIAL, false)
+		approver := fx.Approver(step, 1, cm.NEW)
+
+		tx := database.DB.MustBegin()
+		res, err := approverRepo.IsRouteProcessing(tx, approver.Id)
+		a.Nil(err)
+		a.Nil(tx.Commit())
+		a.True(res)
+		deleteRoute()
+	})
+
+	t.Run("IsRouteProcessing (NEW - false)", func(t *testing.T) {
 		route := fx.Route("route", cm.NEW)
 		group := fx.Group(route, 1, cm.NEW, cm.SERIAL, false)
 		step := fx.Step(group, 1, cm.NEW, cm.SERIAL, false)
 		approver := fx.Approver(step, 1, cm.NEW)
 
-		res, err := approverRepo.IsRouteStarted(approver.Id)
+		tx := database.DB.MustBegin()
+		res, err := approverRepo.IsRouteProcessing(tx, approver.Id)
 		a.Nil(err)
+		a.Nil(tx.Commit())
 		a.False(res)
 		deleteRoute()
 	})

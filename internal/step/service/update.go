@@ -12,9 +12,7 @@ import (
 )
 
 var (
-	ErrStepNotFound       = errors.New("step not found")
-	ErrStepAlreadyStarted = errors.New("step is already started")
-	ErrStepIsFinished     = errors.New("step is finished")
+	ErrStepNotFound = errors.New("step not found")
 )
 
 func UpdateStep(request sm.UpdateStepRequest) (routeId int64, err error) {
@@ -54,10 +52,6 @@ func validateStep(
 		return err
 	case step.Id == 0:
 		return ErrStepNotFound
-	case step.Status == cm.FINISHED:
-		return ErrStepIsFinished
-	case step.Status == cm.STARTED:
-		return ErrStepAlreadyStarted
 	}
 	return nil
 }

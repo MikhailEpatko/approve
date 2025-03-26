@@ -12,6 +12,14 @@ func FindById(approverId int64) (approver am.ApproverEntity, err error) {
 	return approver, err
 }
 
+func FindByIdTx(
+	tx *sqlx.Tx,
+	approverId int64,
+) (approver am.ApproverEntity, err error) {
+	err = tx.Get(&approver, "select * from approver where id = $1", approverId)
+	return approver, err
+}
+
 func FindByStepId(stepId int64) ([]am.ApproverEntity, error) {
 	var approvers []am.ApproverEntity
 	err := database.DB.Select(&approvers, "select * from approver where step_id = $1", stepId)
@@ -48,8 +56,11 @@ func StartStepApprovers(
 	return err
 }
 
-func Update(approver am.ApproverEntity) (approverId int64, err error) {
-	_, err = database.DB.NamedExec(
+func Update(
+	tx *sqlx.Tx,
+	approver am.ApproverEntity,
+) (approverId int64, err error) {
+	_, err = tx.NamedExec(
 		`update approver 
      set name = :name,
        guid = :guid,
@@ -111,8 +122,11 @@ func StartNextApprover(
 	return err
 }
 
-func IsRouteStarted(approverId int64) (res bool, err error) {
-	err = database.DB.Get(
+func IsRouteProcessing(
+	tx *sqlx.Tx,
+	approverId int64,
+) (res bool, err error) {
+	err = tx.Get(
 		&res,
 		`select exists (select 1 
                     from route r
@@ -120,7 +134,7 @@ func IsRouteStarted(approverId int64) (res bool, err error) {
                     inner join step s on s.step_group_id = sg.id
                     inner join approver a on s.id = a.step_id
                     where a.id = $1 
-                    and r.status = 'STARTED')`,
+                    and r.status in ('STARTED', 'FINISHED'))`,
 		approverId,
 	)
 	return res, err

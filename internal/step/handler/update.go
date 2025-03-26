@@ -2,6 +2,7 @@ package handler
 
 import (
 	cm "approve/internal/common"
+	rs "approve/internal/route/service"
 	"approve/internal/step/model"
 	svc "approve/internal/step/service"
 	"errors"
@@ -21,9 +22,8 @@ func UpdateStep(c *fiber.Ctx) {
 
 	stepId, err := svc.UpdateStep(request)
 	if err != nil {
-		if errors.Is(err, svc.ErrStepNotFound) ||
-			errors.Is(err, svc.ErrStepAlreadyStarted) ||
-			errors.Is(err, svc.ErrStepIsFinished) ||
+		if errors.Is(err, rs.ErrRouteAlreadyStarted) ||
+			errors.Is(err, svc.ErrStepNotFound) ||
 			errors.Is(err, cm.RequestValidationError{}) {
 			_ = cm.ErrResponse(c, 400, err.Error())
 		} else {

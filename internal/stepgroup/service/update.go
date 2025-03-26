@@ -12,9 +12,7 @@ import (
 )
 
 var (
-	ErrStepGroupNotFound       = errors.New("step group not found")
-	ErrStepGroupAlreadyStarted = errors.New("step group is already started")
-	ErrStepGroupIsFinished     = errors.New("step group is finished")
+	ErrStepGroupNotFound = errors.New("step group not found")
 )
 
 func UpdateStepGroup(request gm.UpdateStepGroupRequest) (groupId int64, err error) {
@@ -54,10 +52,6 @@ func validateStepGroup(
 		return err
 	case group.Id == 0:
 		return ErrStepGroupNotFound
-	case group.Status == cm.FINISHED:
-		return ErrStepGroupIsFinished
-	case group.Status == cm.STARTED:
-		return ErrStepGroupAlreadyStarted
 	}
 	return nil
 }

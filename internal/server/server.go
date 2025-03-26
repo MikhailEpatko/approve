@@ -1,6 +1,7 @@
 package server
 
 import (
+	approverHandler "approve/internal/approver/handler"
 	routeHandler "approve/internal/route/handler"
 	stepHandler "approve/internal/step/handler"
 	stepGroupHandler "approve/internal/stepgroup/handler"
@@ -20,5 +21,8 @@ func SetupRoutes(app *fiber.App) {
 
 	api.Post("/step", stepHandler.CreateStepTemplate)
 	api.Put("/step", stepHandler.UpdateStep)
+
+	api.Post("/approver", approverHandler.CreateApproverTemplate)
+	api.Put("/approver", approverHandler.UpdateApprover)
 
 }

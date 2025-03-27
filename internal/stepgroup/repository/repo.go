@@ -144,3 +144,8 @@ func StartNextGroup(
 	)
 	return nextGroupId, err
 }
+
+func DeleteById(stepGroupId int64) error {
+	_, err := database.DB.Exec("delete from step_group where id = $1", stepGroupId)
+	return err
+}

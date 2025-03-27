@@ -53,7 +53,6 @@ func ApprovingInfoTx(
 			 sg.id as step_group_id,
 			 sg.step_order as step_order,
 			 s.id as step_id,
-			 s.status as step_status,
 			 s.approver_order as approver_order,
 			 a.id as approver_id,
 			 a.guid as guid,
@@ -66,4 +65,12 @@ func ApprovingInfoTx(
 		approverId,
 	)
 	return res, err
+}
+
+func FindByApproverIds(approverIds []int64) (resolutions []resm.ResolutionEntity, err error) {
+	query, args, err := sqlx.In(`select * from resolution where approver_id in (?)`, approverIds)
+	if err == nil {
+		err = database.DB.Select(&resolutions, query, args...)
+	}
+	return resolutions, err
 }

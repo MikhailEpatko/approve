@@ -19,7 +19,6 @@ var (
 	ErrCommentShouldBeProvided = errors.New("comment should be provided")
 	ErrApproverNotFound        = errors.New("approver was not found")
 	ErrApproverIsNotStarted    = errors.New("approver is not started")
-	ErrStepIsNotStarted        = errors.New("step is not started")
 )
 
 func CreateResolution(
@@ -58,7 +57,10 @@ func validateRequest(
 	tx *sqlx.Tx,
 	request resm.CreateResolutionRequest,
 ) (info resm.ApprovingInfoEntity, err error) {
-	// TODO: check if requester is approver (has approver's guid in jwt token)
+	err = cm.Validate(request)
+	if err != nil {
+		return info, cm.RequestValidationError{Message: err.Error()}
+	}
 	if !request.IsApproved && strings.TrimSpace(request.Comment) == "" {
 		return info, ErrCommentShouldBeProvided
 	}
@@ -66,12 +68,10 @@ func validateRequest(
 	switch {
 	case err != nil:
 		break
-	case info.Guid == "":
+	case info.ApproverId == 0:
 		err = ErrApproverNotFound
 	case info.ApproverStatus != cm.STARTED:
 		err = ErrApproverIsNotStarted
-	case info.StepStatus != cm.STARTED:
-		err = ErrStepIsNotStarted
 	}
 	return info, err
 }

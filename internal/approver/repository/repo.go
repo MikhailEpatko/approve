@@ -139,3 +139,16 @@ func IsRouteProcessing(
 	)
 	return res, err
 }
+
+func FindByStepIds(stepIds []int64) (approvers []am.ApproverEntity, err error) {
+	query, args, err := sqlx.In(`select * from approver where step_id in (?)`, stepIds)
+	if err == nil {
+		err = database.DB.Select(&approvers, query, args...)
+	}
+	return approvers, err
+}
+
+func DeleteById(approver int64) error {
+	_, err := database.DB.Exec("delete from approver where id = $1", approver)
+	return err
+}

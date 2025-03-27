@@ -64,6 +64,7 @@ func TestResolutionRepository(t *testing.T) {
 		a.Equal(approver.Id, got.ApproverId)
 		a.Equal(cm.PARALLEL_ANY_OF, got.StepOrder)
 		a.Equal(cm.SERIAL, got.ApproverOrder)
+		a.Equal(cm.STARTED, got.ApproverStatus)
 		deleteRoute()
 	})
 }

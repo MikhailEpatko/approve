@@ -36,6 +36,14 @@ func FindByGroupId(id int64) ([]sm.StepEntity, error) {
 	return steps, err
 }
 
+func FindByStepGroupIds(stepGroupIds []int64) (steps []sm.StepEntity, err error) {
+	query, args, err := sqlx.In(`select * from step where step_group_id in(?)`, stepGroupIds)
+	if err == nil {
+		err = database.DB.Select(&steps, query, args...)
+	}
+	return steps, err
+}
+
 func Save(step sm.StepEntity) (id int64, err error) {
 	err = database.DB.Get(
 		&id,
@@ -175,4 +183,9 @@ func StartNextStep(
 		stepId,
 	)
 	return nextStepId, err
+}
+
+func DeleteById(stepId int64) error {
+	_, err := database.DB.Exec("delete from step where id = $1", stepId)
+	return err
 }

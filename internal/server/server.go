@@ -12,19 +12,25 @@ import (
 func SetupRoutes(app *fiber.App) {
 	api := app.Group("/api")
 
-	api.Post("/route", routeHandler.CreateRouteTemplate)
+	api.Post("/route/template", routeHandler.CreateRouteTemplate)
 	api.Put("/route", routeHandler.UpdateRoute)
 	api.Put("/route/:routeId", routeHandler.StartRoute)
 	api.Post("/route/by-filter", routeHandler.FindByFilter)
+	api.Get("/route/:routeId", routeHandler.FindFullRouteById)
+	// Todo: api.Delete("/route/:routeId", routeHandler.DeleteRouteById)
+	// Todo: api.Post("/route/create-from-template/:routeTemplateId", routeHandler.CreateNewRouteFromTemplate)
 
-	api.Post("/group", stepGroupHandler.CreateStepGroupTemplate)
+	api.Post("/group/template", stepGroupHandler.CreateStepGroupTemplate)
 	api.Put("/group", stepGroupHandler.UpdateStepGroup)
+	// Todo: api.Delete("/group/:groupId", stepGroupHandler.DeleteStepGroupById)
 
-	api.Post("/step", stepHandler.CreateStepTemplate)
+	api.Post("/step/template", stepHandler.CreateStepTemplate)
 	api.Put("/step", stepHandler.UpdateStep)
+	// Todo: api.Delete("/step/:stepId", stepHandler.DeleteStepById)
 
 	api.Post("/approver", approverHandler.CreateApproverTemplate)
 	api.Put("/approver", approverHandler.UpdateApprover)
+	// Todo: api.Delete("/approver/:approverId", approverHandler.DeleteApproverById)
 
 	api.Post("/resolution", resolutionHandler.CreateResolution)
 }

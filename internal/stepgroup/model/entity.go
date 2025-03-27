@@ -2,6 +2,7 @@ package model
 
 import (
 	"approve/internal/common"
+	sm "approve/internal/step/model"
 )
 
 type StepGroupEntity struct {
@@ -12,4 +13,17 @@ type StepGroupEntity struct {
 	Status     common.Status    `db:"status"`
 	StepOrder  common.OrderType `db:"step_order"`
 	IsApproved bool             `db:"is_approved"`
+}
+
+func (e StepGroupEntity) ToFullResponse(steps []sm.StepFullResponse) StepGroupFullResponse {
+	return StepGroupFullResponse{
+		Id:         e.Id,
+		RouteId:    e.RouteId,
+		Name:       e.Name,
+		Number:     e.Number,
+		Status:     e.Status,
+		StepOrder:  e.StepOrder,
+		IsApproved: e.IsApproved,
+		Steps:      steps,
+	}
 }

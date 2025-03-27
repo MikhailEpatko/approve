@@ -21,7 +21,7 @@ func CreateStepTemplate(c *fiber.Ctx) {
 	stepId, err := svc.CreateStepTemplate(request)
 	if err != nil {
 		switch {
-		case errors.As(err, &cm.RequestValidationError{}):
+		case errors.Is(err, &cm.RequestValidationError{}):
 			_ = cm.ErrResponse(c, 400, err.Error())
 		default:
 			_ = cm.ErrResponse(c, 500, err.Error())
@@ -31,7 +31,7 @@ func CreateStepTemplate(c *fiber.Ctx) {
 	}
 	cm.Logger.Info("created step template", zap.String("stepId", strconv.FormatInt(stepId, 10)))
 
-	if err := cm.OkResponse(c, stepId); err != nil {
+	if err = cm.OkResponse(c, stepId); err != nil {
 		_ = cm.ErrResponse(c, 500, "error returning created step template id")
 		cm.Logger.Error("error returning created step template id", zap.Error(err))
 		return

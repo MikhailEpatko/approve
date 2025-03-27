@@ -53,7 +53,6 @@ func ApprovingInfoTx(
 			 sg.id as step_group_id,
 			 sg.step_order as step_order,
 			 s.id as step_id,
-			 s.status as step_status,
 			 s.approver_order as approver_order,
 			 a.id as approver_id,
 			 a.guid as guid,

@@ -14,7 +14,6 @@ type ApprovingInfoEntity struct {
 	StepGroupId    int64            `db:"step_group_id"`
 	StepOrder      common.OrderType `db:"step_order"`
 	StepId         int64            `db:"step_id"`
-	StepStatus     common.Status    `db:"step_status"`
 	ApproverOrder  common.OrderType `db:"approver_order"`
 	ApproverId     int64            `db:"approver_id"`
 	Guid           string           `db:"guid"`

@@ -15,7 +15,7 @@ type StepGroupEntity struct {
 	IsApproved bool             `db:"is_approved"`
 }
 
-func (e StepGroupEntity) ToFullResponse(steps []sm.StepFullResponse) StepGroupFullResponse {
+func (e *StepGroupEntity) ToFullResponse(steps []sm.StepFullResponse) StepGroupFullResponse {
 	return StepGroupFullResponse{
 		Id:         e.Id,
 		RouteId:    e.RouteId,

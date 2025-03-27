@@ -13,7 +13,7 @@ type RouteEntity struct {
 	IsApproved  bool      `db:"is_approved"`
 }
 
-func (e RouteEntity) ToResponse() RouteResponse {
+func (e *RouteEntity) ToResponse() RouteResponse {
 	return RouteResponse{
 		Id:          e.Id,
 		Name:        e.Name,
@@ -22,7 +22,7 @@ func (e RouteEntity) ToResponse() RouteResponse {
 	}
 }
 
-func (e RouteEntity) ToFullResponse(stepGroups []gm.StepGroupFullResponse) FullRouteResponse {
+func (e *RouteEntity) ToFullResponse(stepGroups []gm.StepGroupFullResponse) FullRouteResponse {
 	return FullRouteResponse{
 		Id:          e.Id,
 		Name:        e.Name,

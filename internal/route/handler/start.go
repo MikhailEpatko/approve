@@ -26,8 +26,8 @@ func StartRoute(c *fiber.Ctx) {
 
 	err = svc.StartRoute(routeId)
 	if err != nil {
-		switch {
-		case err == svc.ErrRouteNotFound || err == svc.ErrRouteAlreadyStarted || err == svc.ErrRouteIsFinished:
+		switch err {
+		case svc.ErrRouteNotFound, svc.ErrRouteAlreadyStarted, svc.ErrRouteIsFinished:
 			_ = cm.ErrResponse(c, 400, err.Error())
 		default:
 			_ = cm.ErrResponse(c, 500, err.Error())

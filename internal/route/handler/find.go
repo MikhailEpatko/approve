@@ -26,8 +26,8 @@ func FindFullRouteById(c *fiber.Ctx) {
 
 	fullRoute, err := svc.FindFullRouteById(routeId)
 	if err != nil {
-		switch {
-		case err == svc.ErrRouteNotFound:
+		switch err {
+		case svc.ErrRouteNotFound:
 			_ = cm.ErrResponse(c, 400, err.Error())
 		default:
 			_ = cm.ErrResponse(c, 500, err.Error())

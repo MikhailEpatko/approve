@@ -16,7 +16,7 @@ type ApproverEntity struct {
 	Status   cm.Status `db:"status"`
 }
 
-func (e ApproverEntity) ToFullResponse(resolution resm.ResolutionResponse) ApproverFullResponse {
+func (e *ApproverEntity) ToFullResponse(resolution resm.ResolutionResponse) ApproverFullResponse {
 	return ApproverFullResponse{
 		Id:         e.Id,
 		StepId:     e.StepId,

@@ -9,7 +9,7 @@ type ResolutionEntity struct {
 	Comment    string `db:"comment"`
 }
 
-func (e ResolutionEntity) ToResponse() ResolutionResponse {
+func (e *ResolutionEntity) ToResponse() ResolutionResponse {
 	return ResolutionResponse{
 		Id:         e.Id,
 		ApproverId: e.ApproverId,

@@ -34,5 +34,4 @@ func DeleteRouteById(c *fiber.Ctx) {
 
 	cm.Logger.Info("deleted route", zap.String("routeId", routeIdStr))
 	_ = cm.OkResponse(c, nil)
-	return
 }

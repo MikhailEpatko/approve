@@ -34,5 +34,4 @@ func DeleteStepGroupById(c *fiber.Ctx) {
 
 	cm.Logger.Info("deleted step group", zap.String("stepGroupId", stepGroupIdStr))
 	_ = cm.OkResponse(c, nil)
-	return
 }

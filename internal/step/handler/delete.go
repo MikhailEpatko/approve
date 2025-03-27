@@ -34,5 +34,4 @@ func DeleteStepById(c *fiber.Ctx) {
 
 	cm.Logger.Info("deleted step", zap.String("stepId", stepIdStr))
 	_ = cm.OkResponse(c, nil)
-	return
 }

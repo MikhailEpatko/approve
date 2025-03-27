@@ -34,5 +34,4 @@ func DeleteApproverById(c *fiber.Ctx) {
 
 	cm.Logger.Info("deleted approver", zap.String("approverId", approverIdStr))
 	_ = cm.OkResponse(c, nil)
-	return
 }

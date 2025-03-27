@@ -184,3 +184,8 @@ func StartNextStep(
 	)
 	return nextStepId, err
 }
+
+func DeleteById(stepId int64) error {
+	_, err := database.DB.Exec("delete from step where id = $1", stepId)
+	return err
+}

@@ -4,7 +4,6 @@ import (
 	cm "approve/internal/common"
 	"approve/internal/database"
 	gm "approve/internal/stepgroup/model"
-
 	"github.com/jmoiron/sqlx"
 )
 
@@ -21,9 +20,8 @@ func FindByIdTx(
 	return group, err
 }
 
-func FindByRouteId(id int64) ([]gm.StepGroupEntity, error) {
-	var groups []gm.StepGroupEntity
-	err := database.DB.Select(&groups, "select * from step_group where route_id = $1", id)
+func FindByRouteId(routeId int64) (groups []gm.StepGroupEntity, err error) {
+	err = database.DB.Select(&groups, "select * from step_group where route_id = $1", routeId)
 	return groups, err
 }
 
@@ -148,4 +146,32 @@ func StartNextGroup(
 func DeleteById(stepGroupId int64) error {
 	_, err := database.DB.Exec("delete from step_group where id = $1", stepGroupId)
 	return err
+}
+
+func FindByRouteIdTx(
+	tx *sqlx.Tx,
+	routeId int64,
+) (groups []gm.StepGroupEntity, err error) {
+	err = tx.Select(&groups, "select * from step_group where route_id = $1", routeId)
+	return groups, err
+}
+
+func SaveAll(
+	tx *sqlx.Tx,
+	toSave []gm.StepGroupEntity,
+) (groups []gm.StepGroupEntity, err error) {
+	rows, err := tx.NamedQuery(`insert into step_group (route_id, name, number, status, step_order)
+                              values (:route_id, :name, :number, :status, :step_order) returning *`,
+		toSave)
+	if err == nil {
+		for rows.Next() {
+			var group gm.StepGroupEntity
+			err = rows.StructScan(&group)
+			if err != nil {
+				return nil, err
+			}
+			groups = append(groups, group)
+		}
+	}
+	return groups, err
 }

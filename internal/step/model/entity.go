@@ -27,3 +27,13 @@ func (e *StepEntity) ToFullResponse(approvers []am.ApproverFullResponse) StepFul
 		Approvers:     approvers,
 	}
 }
+
+func (e *StepEntity) ToNewStep(stepGroupId int64) StepEntity {
+	return StepEntity{
+		StepGroupId:   stepGroupId,
+		Name:          e.Name,
+		Number:        e.Number,
+		Status:        common.NEW,
+		ApproverOrder: e.ApproverOrder,
+	}
+}

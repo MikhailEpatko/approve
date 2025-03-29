@@ -34,7 +34,7 @@ func UpdateRoute(c *fiber.Ctx) {
 	}
 	cm.Logger.Info("updated route", zap.String("routeId", strconv.FormatInt(routeId, 10)))
 
-	if err := cm.OkResponse(c, routeId); err != nil {
+	if err = cm.OkResponse(c, routeId); err != nil {
 		_ = cm.ErrResponse(c, 500, "error returning updated route id")
 		cm.Logger.Error("error returning updated route id", zap.Error(err))
 		return

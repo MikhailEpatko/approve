@@ -18,6 +18,7 @@ var (
 	ErrRouteNotFound       = errors.New("route not found")
 	ErrRouteAlreadyStarted = errors.New("route is already started")
 	ErrRouteIsFinished     = errors.New("route is finished")
+	ErrRouteIsTemplate     = errors.New("route is template and coudn't be started")
 )
 
 func StartRoute(routeId int64) (err error) {
@@ -39,12 +40,22 @@ func StartRoute(routeId int64) (err error) {
 			return ErrRouteNotFound
 		case route.Status == cm.FINISHED:
 			return ErrRouteIsFinished
+		case route.Status == cm.TEMPLATE:
+			return ErrRouteIsTemplate
 		case route.Status == cm.STARTED:
 			return ErrRouteAlreadyStarted
 		}
 		return nil
 	})
+	err = cm.SafeExecute(err, func() error {
+		return checkRouteReadyToStart(tx, routeId)
+	})
 	return cm.SafeExecute(err, func() error { return startRote(tx, routeId) })
+}
+
+func checkRouteReadyToStart(tx *sqlx.Tx, routeId int64) (err error) {
+	//TODO: check route is ready to start (issue https://github.com/MikhailEpatko/approve/issues/54)
+	return nil
 }
 
 func startRote(

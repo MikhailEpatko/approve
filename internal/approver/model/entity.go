@@ -29,3 +29,15 @@ func (e *ApproverEntity) ToFullResponse(resolution resm.ResolutionResponse) Appr
 		Resolution: resolution,
 	}
 }
+
+func (e *ApproverEntity) ToNewApprover(stepId int64) ApproverEntity {
+	return ApproverEntity{
+		StepId:   stepId,
+		Guid:     e.Guid,
+		Name:     e.Name,
+		Position: e.Position,
+		Email:    e.Email,
+		Number:   e.Number,
+		Status:   cm.NEW,
+	}
+}

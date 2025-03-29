@@ -18,7 +18,7 @@ func SetupRoutes(app *fiber.App) {
 	api.Post("/route/by-filter", routeHandler.FindByFilter)
 	api.Get("/route/:routeId", routeHandler.FindFullRouteById)
 	api.Delete("/route/:routeId", routeHandler.DeleteRouteById)
-	// Todo: api.Post("/route/create-from-template/:routeTemplateId", routeHandler.CreateNewRouteFromTemplate)
+	api.Post("/route/from-template/:routeTemplateId", routeHandler.CreateNewRouteFromTemplate)
 
 	api.Post("/group/template", stepGroupHandler.CreateStepGroupTemplate)
 	api.Put("/group", stepGroupHandler.UpdateStepGroup)

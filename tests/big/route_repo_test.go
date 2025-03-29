@@ -4,7 +4,7 @@ import (
 	cm "approve/internal/common"
 	"approve/internal/database"
 	rm "approve/internal/route/model"
-	routeRepo "approve/internal/route/repository"
+	"approve/internal/route/repository"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -15,7 +15,7 @@ func setup() rm.RouteEntity {
 		Description: "test description",
 		Status:      cm.TEMPLATE,
 	}
-	route.Id, _ = routeRepo.Save(route)
+	route.Id, _ = repository.Save(route)
 	return route
 }
 
@@ -32,7 +32,7 @@ func TestRouteRepository(t *testing.T) {
 			Description: "test description",
 			Status:      cm.TEMPLATE,
 		}
-		routeId, err := routeRepo.Save(route)
+		routeId, err := repository.Save(route)
 
 		a.Nil(err)
 		a.NotEmpty(routeId)
@@ -42,7 +42,7 @@ func TestRouteRepository(t *testing.T) {
 	t.Run("get route by id", func(t *testing.T) {
 		want := setup()
 
-		got, err := routeRepo.FindById(want.Id)
+		got, err := repository.FindById(want.Id)
 
 		a.Nil(err)
 		a.NotEmpty(got.Id)
@@ -59,9 +59,9 @@ func TestRouteRepository(t *testing.T) {
 
 		tx := database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
-		a.Nil(routeRepo.StartRoute(tx, want.Id))
+		a.Nil(repository.StartRoute(tx, want.Id))
 		_ = tx.Commit()
-		got, err := routeRepo.FindById(want.Id)
+		got, err := repository.FindById(want.Id)
 
 		a.Nil(err)
 		a.Equal(want.Id, got.Id)
@@ -84,10 +84,10 @@ func TestRouteRepository(t *testing.T) {
 
 		tx := database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
-		_, err := routeRepo.Update(tx, toUpdate)
+		_, err := repository.Update(tx, toUpdate)
 		a.Nil(err)
 		a.Nil(tx.Commit())
-		got, err := routeRepo.FindById(want.Id)
+		got, err := repository.FindById(want.Id)
 
 		a.Nil(err)
 		a.Equal(want.Id, got.Id)
@@ -103,7 +103,7 @@ func TestRouteRepository(t *testing.T) {
 
 		tx := database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
-		got, err := routeRepo.IsRouteStarted(tx, route.Id)
+		got, err := repository.IsRouteStarted(tx, route.Id)
 		a.Nil(err)
 		a.Nil(tx.Commit())
 
@@ -116,9 +116,9 @@ func TestRouteRepository(t *testing.T) {
 		route := setup()
 		tx := database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
-		a.Nil(routeRepo.StartRoute(tx, route.Id))
+		a.Nil(repository.StartRoute(tx, route.Id))
 
-		got, err := routeRepo.IsRouteStarted(tx, route.Id)
+		got, err := repository.IsRouteStarted(tx, route.Id)
 		a.Nil(err)
 		a.Nil(tx.Commit())
 
@@ -131,17 +131,17 @@ func TestRouteRepository(t *testing.T) {
 		want := setup()
 		tx := database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
-		a.Nil(routeRepo.StartRoute(tx, want.Id))
-		isStarted, _ := routeRepo.IsRouteStarted(tx, want.Id)
+		a.Nil(repository.StartRoute(tx, want.Id))
+		isStarted, _ := repository.IsRouteStarted(tx, want.Id)
 		a.Nil(tx.Commit())
 
 		a.True(isStarted)
 
 		tx = database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
-		a.Nil(routeRepo.FinishRoute(tx, want.Id, true))
+		a.Nil(repository.FinishRoute(tx, want.Id, true))
 		_ = tx.Commit()
-		got, err := routeRepo.FindById(want.Id)
+		got, err := repository.FindById(want.Id)
 
 		a.Nil(err)
 		a.Equal(want.Id, got.Id)
@@ -156,17 +156,17 @@ func TestRouteRepository(t *testing.T) {
 		want := setup()
 		tx := database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
-		a.Nil(routeRepo.StartRoute(tx, want.Id))
-		isStarted, _ := routeRepo.IsRouteStarted(tx, want.Id)
+		a.Nil(repository.StartRoute(tx, want.Id))
+		isStarted, _ := repository.IsRouteStarted(tx, want.Id)
 		a.Nil(tx.Commit())
 
 		a.True(isStarted)
 
 		tx = database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
-		a.Nil(routeRepo.FinishRoute(tx, want.Id, false))
+		a.Nil(repository.FinishRoute(tx, want.Id, false))
 		_ = tx.Commit()
-		got, err := routeRepo.FindById(want.Id)
+		got, err := repository.FindById(want.Id)
 
 		a.Nil(err)
 		a.Equal(want.Id, got.Id)
@@ -174,6 +174,30 @@ func TestRouteRepository(t *testing.T) {
 		a.Equal(want.Description, got.Description)
 		a.Equal(cm.FINISHED, got.Status)
 		a.False(got.IsApproved)
+		deleteRoutes()
+	})
+
+	t.Run("SaveTx should save route and return its id)", func(t *testing.T) {
+		toSave := rm.RouteEntity{
+			Name:        "name",
+			Description: "description",
+			Status:      cm.NEW,
+		}
+
+		tx := database.DB.MustBegin()
+		defer func() { _ = tx.Rollback() }()
+		id, err := repository.SaveTx(tx, toSave)
+		a.Nil(err)
+		a.Nil(tx.Commit())
+
+		got, err := repository.FindById(id)
+
+		a.Nil(err)
+		a.NotEmpty(got)
+		a.Equal(toSave.Name, got.Name)
+		a.Equal(toSave.Description, got.Description)
+		a.Equal(toSave.Status, got.Status)
+		a.Equal(toSave.IsApproved, got.IsApproved)
 		deleteRoutes()
 	})
 }

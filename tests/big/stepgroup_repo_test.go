@@ -4,10 +4,11 @@ import (
 	cm "approve/internal/common"
 	"approve/internal/database"
 	gm "approve/internal/stepgroup/model"
-	stepGroupRepo "approve/internal/stepgroup/repository"
+	"approve/internal/stepgroup/repository"
 	fx "approve/tests/big/fixtures"
 	"fmt"
 	"github.com/stretchr/testify/assert"
+	"slices"
 	"testing"
 )
 
@@ -36,7 +37,7 @@ func TestStepGroupRepository(t *testing.T) {
 		route2 := fx.Route(routeName, status)
 		_ = fx.Group(route2, 1, status, cm.PARALLEL_ALL_OF, false)
 
-		got, err := stepGroupRepo.FindByRouteId(route1.Id)
+		got, err := repository.FindByRouteId(route1.Id)
 
 		a.Nil(err)
 		a.NotNil(got)
@@ -52,7 +53,7 @@ func TestStepGroupRepository(t *testing.T) {
 
 		tx := database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
-		got, err := stepGroupRepo.StartFirstGroup(tx, route1.Id)
+		got, err := repository.StartFirstGroup(tx, route1.Id)
 		a.Nil(tx.Commit())
 
 		a.Nil(err)
@@ -66,7 +67,7 @@ func TestStepGroupRepository(t *testing.T) {
 		a.Equal(want.StepOrder, got.StepOrder)
 		a.Equal(want.IsApproved, got.IsApproved)
 
-		group2After, err := stepGroupRepo.FindById(group2Before.Id)
+		group2After, err := repository.FindById(group2Before.Id)
 
 		a.Nil(err)
 		a.Equal(group2Before, group2After)
@@ -85,13 +86,13 @@ func TestStepGroupRepository(t *testing.T) {
 
 		tx := database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
-		got, err := stepGroupRepo.Update(tx, toUpdate)
+		got, err := repository.Update(tx, toUpdate)
 		a.Nil(err)
 		a.NotNil(got)
 		a.Equal(groupBefore.Id, got)
 		a.Nil(tx.Commit())
 
-		groupAfter, err := stepGroupRepo.FindById(groupBefore.Id)
+		groupAfter, err := repository.FindById(groupBefore.Id)
 
 		a.Nil(err)
 		a.NotEmpty(groupAfter)
@@ -117,7 +118,7 @@ func TestStepGroupRepository(t *testing.T) {
 
 			tx := database.DB.MustBegin()
 			defer func() { _ = tx.Rollback() }()
-			got, err := stepGroupRepo.IsRouteProcessing(tx, group.Id)
+			got, err := repository.IsRouteProcessing(tx, group.Id)
 			a.Nil(tx.Commit())
 
 			a.Nil(err)
@@ -132,9 +133,9 @@ func TestStepGroupRepository(t *testing.T) {
 
 		tx := database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
-		a.Nil(stepGroupRepo.FinishGroup(tx, group.Id))
+		a.Nil(repository.FinishGroup(tx, group.Id))
 		a.Nil(tx.Commit())
-		got, err := stepGroupRepo.FindById(group.Id)
+		got, err := repository.FindById(group.Id)
 
 		a.Nil(err)
 		a.Equal(cm.FINISHED, got.Status)
@@ -148,12 +149,12 @@ func TestStepGroupRepository(t *testing.T) {
 
 		tx := database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
-		nextGroupId, err := stepGroupRepo.StartNextGroup(tx, route.Id, group1.Id)
+		nextGroupId, err := repository.StartNextGroup(tx, route.Id, group1.Id)
 		a.Nil(err)
 		a.Equal(nextGroupId, group2.Id)
 		a.Nil(tx.Commit())
 
-		got, err := stepGroupRepo.FindById(group2.Id)
+		got, err := repository.FindById(group2.Id)
 
 		a.Nil(err)
 		a.Equal(cm.STARTED, got.Status)
@@ -168,7 +169,7 @@ func TestStepGroupRepository(t *testing.T) {
 
 		tx := database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
-		got, err := stepGroupRepo.CalculateAndSetIsApproved(
+		got, err := repository.CalculateAndSetIsApproved(
 			tx,
 			group.Id,
 			group.StepOrder,
@@ -178,7 +179,7 @@ func TestStepGroupRepository(t *testing.T) {
 		a.True(got)
 		a.Nil(tx.Commit())
 
-		groupAfter, err := stepGroupRepo.FindById(group.Id)
+		groupAfter, err := repository.FindById(group.Id)
 		a.Nil(err)
 		a.True(groupAfter.IsApproved)
 		deleteRoute()
@@ -192,7 +193,7 @@ func TestStepGroupRepository(t *testing.T) {
 
 		tx := database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
-		got, err := stepGroupRepo.CalculateAndSetIsApproved(
+		got, err := repository.CalculateAndSetIsApproved(
 			tx,
 			group.Id,
 			group.StepOrder,
@@ -202,7 +203,7 @@ func TestStepGroupRepository(t *testing.T) {
 		a.False(got)
 		a.Nil(tx.Commit())
 
-		groupAfter, err := stepGroupRepo.FindById(group.Id)
+		groupAfter, err := repository.FindById(group.Id)
 		a.Nil(err)
 		a.False(groupAfter.IsApproved)
 		deleteRoute()
@@ -218,7 +219,7 @@ func TestStepGroupRepository(t *testing.T) {
 
 			tx := database.DB.MustBegin()
 			defer func() { _ = tx.Rollback() }()
-			got, err := stepGroupRepo.CalculateAndSetIsApproved(
+			got, err := repository.CalculateAndSetIsApproved(
 				tx,
 				group.Id,
 				group.StepOrder,
@@ -228,7 +229,7 @@ func TestStepGroupRepository(t *testing.T) {
 			a.True(got)
 			a.Nil(tx.Commit())
 
-			groupAfter, err := stepGroupRepo.FindById(group.Id)
+			groupAfter, err := repository.FindById(group.Id)
 			a.Nil(err)
 			a.True(groupAfter.IsApproved)
 			deleteRoute()
@@ -244,7 +245,7 @@ func TestStepGroupRepository(t *testing.T) {
 
 			tx := database.DB.MustBegin()
 			defer func() { _ = tx.Rollback() }()
-			got, err := stepGroupRepo.CalculateAndSetIsApproved(
+			got, err := repository.CalculateAndSetIsApproved(
 				tx,
 				group.Id,
 				group.StepOrder,
@@ -254,7 +255,7 @@ func TestStepGroupRepository(t *testing.T) {
 			a.False(got)
 			a.Nil(tx.Commit())
 
-			groupAfter, err := stepGroupRepo.FindById(group.Id)
+			groupAfter, err := repository.FindById(group.Id)
 			a.Nil(err)
 			a.False(groupAfter.IsApproved)
 			deleteRoute()
@@ -270,7 +271,7 @@ func TestStepGroupRepository(t *testing.T) {
 
 			tx := database.DB.MustBegin()
 			defer func() { _ = tx.Rollback() }()
-			got, err := stepGroupRepo.CalculateAndSetIsApproved(
+			got, err := repository.CalculateAndSetIsApproved(
 				tx,
 				group.Id,
 				group.StepOrder,
@@ -280,7 +281,7 @@ func TestStepGroupRepository(t *testing.T) {
 			a.True(got)
 			a.Nil(tx.Commit())
 
-			groupAfter, err := stepGroupRepo.FindById(group.Id)
+			groupAfter, err := repository.FindById(group.Id)
 			a.Nil(err)
 			a.True(groupAfter.IsApproved)
 			deleteRoute()
@@ -296,7 +297,7 @@ func TestStepGroupRepository(t *testing.T) {
 
 			tx := database.DB.MustBegin()
 			defer func() { _ = tx.Rollback() }()
-			got, err := stepGroupRepo.CalculateAndSetIsApproved(
+			got, err := repository.CalculateAndSetIsApproved(
 				tx,
 				group.Id,
 				group.StepOrder,
@@ -306,7 +307,7 @@ func TestStepGroupRepository(t *testing.T) {
 			a.True(got)
 			a.Nil(tx.Commit())
 
-			groupAfter, err := stepGroupRepo.FindById(group.Id)
+			groupAfter, err := repository.FindById(group.Id)
 			a.Nil(err)
 			a.True(groupAfter.IsApproved)
 			deleteRoute()
@@ -322,7 +323,7 @@ func TestStepGroupRepository(t *testing.T) {
 
 			tx := database.DB.MustBegin()
 			defer func() { _ = tx.Rollback() }()
-			got, err := stepGroupRepo.CalculateAndSetIsApproved(
+			got, err := repository.CalculateAndSetIsApproved(
 				tx,
 				group.Id,
 				group.StepOrder,
@@ -332,9 +333,56 @@ func TestStepGroupRepository(t *testing.T) {
 			a.False(got)
 			a.Nil(tx.Commit())
 
-			groupAfter, err := stepGroupRepo.FindById(group.Id)
+			groupAfter, err := repository.FindById(group.Id)
 			a.Nil(err)
 			a.False(groupAfter.IsApproved)
 			deleteRoute()
 		})
+
+	t.Run("SaveAll should save all step groups and return saved", func(t *testing.T) {
+		route := fx.Route("route", cm.NEW)
+		group1 := gm.StepGroupEntity{
+			RouteId:   route.Id,
+			Name:      "name1",
+			Number:    1,
+			StepOrder: cm.PARALLEL_ANY_OF,
+			Status:    cm.NEW,
+		}
+		group2 := gm.StepGroupEntity{
+			RouteId:   route.Id,
+			Name:      "name2",
+			Number:    2,
+			StepOrder: cm.SERIAL,
+			Status:    cm.NEW,
+		}
+
+		toSave := []gm.StepGroupEntity{group1, group2}
+
+		tx := database.DB.MustBegin()
+		defer func() { _ = tx.Rollback() }()
+		saved, err := repository.SaveAll(tx, toSave)
+		a.Nil(err)
+		a.Nil(tx.Commit())
+		a.NotEmpty(saved)
+		a.Equal(2, len(saved))
+
+		idx1 := slices.IndexFunc(toSave, func(s gm.StepGroupEntity) bool { return s.Number == 1 })
+		idx2 := slices.IndexFunc(toSave, func(s gm.StepGroupEntity) bool { return s.Number == 2 })
+		saved1 := saved[idx1]
+		saved2 := saved[idx2]
+
+		a.Equal(group1.RouteId, saved1.RouteId)
+		a.Equal(group1.Number, saved1.Number)
+		a.Equal(group1.Name, saved1.Name)
+		a.Equal(group1.Status, saved1.Status)
+		a.Equal(group1.StepOrder, saved1.StepOrder)
+
+		a.Equal(group2.RouteId, saved2.RouteId)
+		a.Equal(group2.Number, saved2.Number)
+		a.Equal(group2.Name, saved2.Name)
+		a.Equal(group2.Status, saved2.Status)
+		a.Equal(group2.StepOrder, saved2.StepOrder)
+
+		deleteRoute()
+	})
 }

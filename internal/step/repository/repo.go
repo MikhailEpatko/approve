@@ -30,9 +30,16 @@ func FindByIdTx(
 	return step, err
 }
 
-func FindByGroupId(id int64) ([]sm.StepEntity, error) {
-	var steps []sm.StepEntity
-	err := database.DB.Select(&steps, "select * from step where step_group_id = $1", id)
+func FindByGroupId(stepGroupId int64) (steps []sm.StepEntity, err error) {
+	err = database.DB.Select(&steps, "select * from step where step_group_id = $1", stepGroupId)
+	return steps, err
+}
+
+func FindByGroupIdTx(
+	tx *sqlx.Tx,
+	stepGroupId int64,
+) (steps []sm.StepEntity, err error) {
+	err = tx.Select(&steps, "select * from step where step_group_id = $1", stepGroupId)
 	return steps, err
 }
 
@@ -188,4 +195,24 @@ func StartNextStep(
 func DeleteById(stepId int64) error {
 	_, err := database.DB.Exec("delete from step where id = $1", stepId)
 	return err
+}
+
+func SaveAll(
+	tx *sqlx.Tx,
+	toSave []sm.StepEntity,
+) (steps []sm.StepEntity, err error) {
+	rows, err := tx.NamedQuery(`insert into step (step_group_id, name, number, status, approver_order)
+                              values (:step_group_id, :name, :number, :status, :approver_order) returning *`,
+		toSave)
+	if err == nil {
+		for rows.Next() {
+			var step sm.StepEntity
+			err = rows.StructScan(&step)
+			if err != nil {
+				return nil, err
+			}
+			steps = append(steps, step)
+		}
+	}
+	return steps, err
 }

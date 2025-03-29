@@ -3,6 +3,7 @@ package model
 import (
 	cm "approve/internal/common"
 	gm "approve/internal/stepgroup/model"
+	"strings"
 )
 
 type RouteEntity struct {
@@ -30,4 +31,17 @@ func (e *RouteEntity) ToFullResponse(stepGroups []gm.StepGroupFullResponse) Full
 		Status:      e.Status,
 		StepGroups:  stepGroups,
 	}
+}
+
+func (e *RouteEntity) ToNewRoute() RouteEntity {
+	return RouteEntity{
+		Name:        removeTemplatePrefix(e.Name),
+		Description: e.Description,
+		Status:      cm.NEW,
+	}
+}
+
+func removeTemplatePrefix(s string) string {
+	res, _ := strings.CutPrefix(s, "Template ")
+	return res
 }

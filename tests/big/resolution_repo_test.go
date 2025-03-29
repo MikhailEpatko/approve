@@ -3,7 +3,7 @@ package big
 import (
 	cm "approve/internal/common"
 	"approve/internal/database"
-	resolutionRepo "approve/internal/resolution/repository"
+	"approve/internal/resolution/repository"
 	fx "approve/tests/big/fixtures"
 	"fmt"
 	"testing"
@@ -34,7 +34,7 @@ func TestResolutionRepository(t *testing.T) {
 		approver2 := fx.Approver(step, 2, cm.STARTED)
 		_ = fx.Resolution(approver2, true)
 
-		got, err := resolutionRepo.FindByApproverId(approver.Id)
+		got, err := repository.FindByApproverId(approver.Id)
 
 		a.Nil(err)
 		a.NotEmpty(got)
@@ -53,7 +53,7 @@ func TestResolutionRepository(t *testing.T) {
 		_ = fx.Approver(step2, 1, cm.NEW)
 
 		tx := database.DB.MustBegin()
-		got, err := resolutionRepo.ApprovingInfoTx(tx, approver.Id)
+		got, err := repository.ApprovingInfoTx(tx, approver.Id)
 		a.Nil(tx.Commit())
 
 		a.Nil(err)

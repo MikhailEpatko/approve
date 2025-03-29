@@ -20,9 +20,16 @@ func FindByIdTx(
 	return approver, err
 }
 
-func FindByStepId(stepId int64) ([]am.ApproverEntity, error) {
-	var approvers []am.ApproverEntity
-	err := database.DB.Select(&approvers, "select * from approver where step_id = $1", stepId)
+func FindByStepId(stepId int64) (approvers []am.ApproverEntity, err error) {
+	err = database.DB.Select(&approvers, "select * from approver where step_id = $1", stepId)
+	return approvers, err
+}
+
+func FindByStepIdTx(
+	tx *sqlx.Tx,
+	stepId int64,
+) (approvers []am.ApproverEntity, err error) {
+	err = tx.Select(&approvers, "select * from approver where step_id = $1", stepId)
 	return approvers, err
 }
 
@@ -150,5 +157,15 @@ func FindByStepIds(stepIds []int64) (approvers []am.ApproverEntity, err error) {
 
 func DeleteById(approver int64) error {
 	_, err := database.DB.Exec("delete from approver where id = $1", approver)
+	return err
+}
+
+func SaveAll(
+	tx *sqlx.Tx,
+	toSave []am.ApproverEntity,
+) (err error) {
+	_, err = tx.NamedExec(`insert into approver (step_id, guid, name, position, email, number, status)
+                         values (:step_id, :guid, :name, :position, :email, :number, :status)`,
+		toSave)
 	return err
 }

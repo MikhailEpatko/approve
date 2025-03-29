@@ -27,3 +27,13 @@ func (e *StepGroupEntity) ToFullResponse(steps []sm.StepFullResponse) StepGroupF
 		Steps:      steps,
 	}
 }
+
+func (e *StepGroupEntity) ToNewStepGroup(routeId int64) StepGroupEntity {
+	return StepGroupEntity{
+		RouteId:   routeId,
+		Name:      e.Name,
+		Number:    e.Number,
+		Status:    common.NEW,
+		StepOrder: e.StepOrder,
+	}
+}

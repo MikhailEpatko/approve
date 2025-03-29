@@ -84,3 +84,17 @@ func DeleteById(routeId int64) error {
 	_, err := database.DB.Exec("delete from route where id = $1", routeId)
 	return err
 }
+
+func SaveTx(
+	tx *sqlx.Tx,
+	route rm.RouteEntity,
+) (newRouteId int64, err error) {
+	err = tx.Get(
+		&newRouteId,
+		"insert into route (name, description, status) values ($1, $2, $3) returning id",
+		route.Name,
+		route.Description,
+		route.Status,
+	)
+	return newRouteId, err
+}

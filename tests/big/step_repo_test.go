@@ -4,10 +4,11 @@ import (
 	cm "approve/internal/common"
 	"approve/internal/database"
 	sm "approve/internal/step/model"
-	stepRepo "approve/internal/step/repository"
+	"approve/internal/step/repository"
 	fx "approve/tests/big/fixtures"
 	"fmt"
 	"github.com/stretchr/testify/assert"
+	"slices"
 	"testing"
 )
 
@@ -32,7 +33,7 @@ func TestStepRepository(t *testing.T) {
 		group2 := fx.Group(route, 2, cm.NEW, cm.PARALLEL_ANY_OF, false)
 		_ = fx.Step(group2, 2, cm.STARTED, cm.PARALLEL_ANY_OF, false)
 
-		got, err := stepRepo.FindByGroupId(group1.Id)
+		got, err := repository.FindByGroupId(group1.Id)
 
 		a.Nil(err)
 		a.NotNil(got)
@@ -49,7 +50,7 @@ func TestStepRepository(t *testing.T) {
 
 		tx := database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
-		got, err := stepRepo.StartSteps(tx, group)
+		got, err := repository.StartSteps(tx, group)
 
 		a.Nil(err)
 		a.NotNil(got)
@@ -64,7 +65,7 @@ func TestStepRepository(t *testing.T) {
 		a.Equal(step1.IsApproved, got[0].IsApproved)
 		a.Nil(tx.Commit())
 
-		step2After, err := stepRepo.FindById(step2.Id)
+		step2After, err := repository.FindById(step2.Id)
 		a.Nil(err)
 		a.NotEmpty(step2After)
 		a.Equal(step2, step2After)
@@ -79,7 +80,7 @@ func TestStepRepository(t *testing.T) {
 
 		tx := database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
-		got, err := stepRepo.StartSteps(tx, group)
+		got, err := repository.StartSteps(tx, group)
 
 		a.Nil(err)
 		a.NotNil(got)
@@ -113,7 +114,7 @@ func TestStepRepository(t *testing.T) {
 
 		tx := database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
-		got, err := stepRepo.StartSteps(tx, group)
+		got, err := repository.StartSteps(tx, group)
 
 		a.Nil(err)
 		a.NotNil(got)
@@ -152,14 +153,14 @@ func TestStepRepository(t *testing.T) {
 
 		tx := database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
-		got, err := stepRepo.Update(tx, toUpdate)
+		got, err := repository.Update(tx, toUpdate)
 		a.Nil(err)
 		a.Nil(tx.Commit())
 
 		a.NotEmpty(got)
 		a.Equal(step.Id, got)
 
-		stepAfter, err := stepRepo.FindById(step.Id)
+		stepAfter, err := repository.FindById(step.Id)
 		a.Nil(err)
 		a.NotEmpty(stepAfter)
 		a.Equal(step.Id, stepAfter.Id)
@@ -185,7 +186,7 @@ func TestStepRepository(t *testing.T) {
 
 			tx := database.DB.MustBegin()
 			defer func() { _ = tx.Rollback() }()
-			got, err := stepRepo.IsRouteProcessing(tx, step.Id)
+			got, err := repository.IsRouteProcessing(tx, step.Id)
 			a.Nil(err)
 			a.Nil(tx.Commit())
 
@@ -201,11 +202,11 @@ func TestStepRepository(t *testing.T) {
 
 		tx := database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
-		err := stepRepo.FinishStep(tx, step.Id)
+		err := repository.FinishStep(tx, step.Id)
 		a.Nil(err)
 		a.Nil(tx.Commit())
 
-		stepAfter, err := stepRepo.FindById(step.Id)
+		stepAfter, err := repository.FindById(step.Id)
 		a.Nil(err)
 		a.NotEmpty(stepAfter)
 		a.Equal(step.Id, stepAfter.Id)
@@ -232,7 +233,7 @@ func TestStepRepository(t *testing.T) {
 
 			tx := database.DB.MustBegin()
 			defer func() { _ = tx.Rollback() }()
-			got, err := stepRepo.CalculateAndSetIsApproved(
+			got, err := repository.CalculateAndSetIsApproved(
 				tx,
 				step.Id,
 				step.ApproverOrder,
@@ -242,7 +243,7 @@ func TestStepRepository(t *testing.T) {
 			a.True(got)
 			a.Nil(tx.Commit())
 
-			stepAfter, err := stepRepo.FindById(step.Id)
+			stepAfter, err := repository.FindById(step.Id)
 			a.Nil(err)
 			a.NotEmpty(stepAfter)
 			a.True(stepAfter.IsApproved)
@@ -262,7 +263,7 @@ func TestStepRepository(t *testing.T) {
 
 			tx := database.DB.MustBegin()
 			defer func() { _ = tx.Rollback() }()
-			got, err := stepRepo.CalculateAndSetIsApproved(
+			got, err := repository.CalculateAndSetIsApproved(
 				tx,
 				step.Id,
 				step.ApproverOrder,
@@ -272,7 +273,7 @@ func TestStepRepository(t *testing.T) {
 			a.False(got)
 			a.Nil(tx.Commit())
 
-			stepAfter, err := stepRepo.FindById(step.Id)
+			stepAfter, err := repository.FindById(step.Id)
 			a.Nil(err)
 			a.NotEmpty(stepAfter)
 			a.False(stepAfter.IsApproved)
@@ -292,7 +293,7 @@ func TestStepRepository(t *testing.T) {
 
 			tx := database.DB.MustBegin()
 			defer func() { _ = tx.Rollback() }()
-			got, err := stepRepo.CalculateAndSetIsApproved(
+			got, err := repository.CalculateAndSetIsApproved(
 				tx,
 				step.Id,
 				step.ApproverOrder,
@@ -302,7 +303,7 @@ func TestStepRepository(t *testing.T) {
 			a.True(got)
 			a.Nil(tx.Commit())
 
-			stepAfter, err := stepRepo.FindById(step.Id)
+			stepAfter, err := repository.FindById(step.Id)
 			a.Nil(err)
 			a.NotEmpty(stepAfter)
 			a.True(stepAfter.IsApproved)
@@ -322,7 +323,7 @@ func TestStepRepository(t *testing.T) {
 
 			tx := database.DB.MustBegin()
 			defer func() { _ = tx.Rollback() }()
-			got, err := stepRepo.CalculateAndSetIsApproved(
+			got, err := repository.CalculateAndSetIsApproved(
 				tx,
 				step.Id,
 				step.ApproverOrder,
@@ -332,7 +333,7 @@ func TestStepRepository(t *testing.T) {
 			a.False(got)
 			a.Nil(tx.Commit())
 
-			stepAfter, err := stepRepo.FindById(step.Id)
+			stepAfter, err := repository.FindById(step.Id)
 			a.Nil(err)
 			a.NotEmpty(stepAfter)
 			a.False(stepAfter.IsApproved)
@@ -352,7 +353,7 @@ func TestStepRepository(t *testing.T) {
 
 			tx := database.DB.MustBegin()
 			defer func() { _ = tx.Rollback() }()
-			got, err := stepRepo.CalculateAndSetIsApproved(
+			got, err := repository.CalculateAndSetIsApproved(
 				tx,
 				step.Id,
 				step.ApproverOrder,
@@ -362,7 +363,7 @@ func TestStepRepository(t *testing.T) {
 			a.True(got)
 			a.Nil(tx.Commit())
 
-			stepAfter, err := stepRepo.FindById(step.Id)
+			stepAfter, err := repository.FindById(step.Id)
 			a.Nil(err)
 			a.NotEmpty(stepAfter)
 			a.True(stepAfter.IsApproved)
@@ -382,7 +383,7 @@ func TestStepRepository(t *testing.T) {
 
 			tx := database.DB.MustBegin()
 			defer func() { _ = tx.Rollback() }()
-			got, err := stepRepo.CalculateAndSetIsApproved(
+			got, err := repository.CalculateAndSetIsApproved(
 				tx,
 				step.Id,
 				step.ApproverOrder,
@@ -392,7 +393,7 @@ func TestStepRepository(t *testing.T) {
 			a.True(got)
 			a.Nil(tx.Commit())
 
-			stepAfter, err := stepRepo.FindById(step.Id)
+			stepAfter, err := repository.FindById(step.Id)
 			a.Nil(err)
 			a.NotEmpty(stepAfter)
 			a.True(stepAfter.IsApproved)
@@ -412,7 +413,7 @@ func TestStepRepository(t *testing.T) {
 
 			tx := database.DB.MustBegin()
 			defer func() { _ = tx.Rollback() }()
-			got, err := stepRepo.CalculateAndSetIsApproved(
+			got, err := repository.CalculateAndSetIsApproved(
 				tx,
 				step.Id,
 				step.ApproverOrder,
@@ -422,7 +423,7 @@ func TestStepRepository(t *testing.T) {
 			a.False(got)
 			a.Nil(tx.Commit())
 
-			stepAfter, err := stepRepo.FindById(step.Id)
+			stepAfter, err := repository.FindById(step.Id)
 			a.Nil(err)
 			a.NotEmpty(stepAfter)
 			a.False(stepAfter.IsApproved)
@@ -437,7 +438,7 @@ func TestStepRepository(t *testing.T) {
 
 		tx := database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
-		got, err := stepRepo.ExistsNotFinishedStepsInGroup(tx, group.Id)
+		got, err := repository.ExistsNotFinishedStepsInGroup(tx, group.Id)
 		a.Nil(err)
 		a.True(got)
 		a.Nil(tx.Commit())
@@ -452,7 +453,7 @@ func TestStepRepository(t *testing.T) {
 
 		tx := database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
-		got, err := stepRepo.ExistsNotFinishedStepsInGroup(tx, group.Id)
+		got, err := repository.ExistsNotFinishedStepsInGroup(tx, group.Id)
 		a.Nil(err)
 		a.False(got)
 		a.Nil(tx.Commit())
@@ -468,21 +469,68 @@ func TestStepRepository(t *testing.T) {
 
 		tx := database.DB.MustBegin()
 		defer func() { _ = tx.Rollback() }()
-		got, err := stepRepo.StartNextStep(tx, group.Id, step1.Id)
+		got, err := repository.StartNextStep(tx, group.Id, step1.Id)
 		a.Nil(err)
 		a.NotEmpty(got)
 		a.Equal(step2.Id, got)
 		a.Nil(tx.Commit())
 
-		step2After, err := stepRepo.FindById(step2.Id)
+		step2After, err := repository.FindById(step2.Id)
 		a.Nil(err)
 		a.NotEmpty(step2After)
 		a.Equal(cm.STARTED, step2After.Status)
 
-		step3After, err := stepRepo.FindById(step3.Id)
+		step3After, err := repository.FindById(step3.Id)
 		a.Nil(err)
 		a.NotEmpty(step3After)
 		a.Equal(cm.NEW, step3After.Status)
+		deleteRoute()
+	})
+
+	t.Run("SaveAll should save all steps and return saved", func(t *testing.T) {
+		route := fx.Route("route", cm.NEW)
+		group := fx.Group(route, 1, cm.NEW, cm.SERIAL, false)
+		step1 := sm.StepEntity{
+			StepGroupId:   group.Id,
+			Number:        1,
+			Name:          "step1",
+			Status:        cm.NEW,
+			ApproverOrder: cm.PARALLEL_ANY_OF,
+		}
+		step2 := sm.StepEntity{
+			StepGroupId:   group.Id,
+			Number:        2,
+			Name:          "step2",
+			Status:        cm.NEW,
+			ApproverOrder: cm.SERIAL,
+		}
+		toSave := []sm.StepEntity{step1, step2}
+
+		tx := database.DB.MustBegin()
+		defer func() { _ = tx.Rollback() }()
+		saved, err := repository.SaveAll(tx, toSave)
+		a.Nil(err)
+		a.Nil(tx.Commit())
+		a.NotEmpty(saved)
+		a.Equal(2, len(saved))
+
+		idx1 := slices.IndexFunc(toSave, func(s sm.StepEntity) bool { return s.Number == 1 })
+		idx2 := slices.IndexFunc(toSave, func(s sm.StepEntity) bool { return s.Number == 2 })
+		saved1 := saved[idx1]
+		saved2 := saved[idx2]
+
+		a.Equal(step1.StepGroupId, saved1.StepGroupId)
+		a.Equal(step1.Number, saved1.Number)
+		a.Equal(step1.Name, saved1.Name)
+		a.Equal(step1.Status, saved1.Status)
+		a.Equal(step1.Number, saved1.Number)
+
+		a.Equal(step2.StepGroupId, saved2.StepGroupId)
+		a.Equal(step2.Number, saved2.Number)
+		a.Equal(step2.Name, saved2.Name)
+		a.Equal(step2.Status, saved2.Status)
+		a.Equal(step2.Number, saved2.Number)
+
 		deleteRoute()
 	})
 }
